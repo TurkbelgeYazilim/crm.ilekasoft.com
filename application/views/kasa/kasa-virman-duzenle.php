@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+		<?php $this->load->view("include/head-tags"); ?>
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" integrity="sha512-vKMx8UnXk60zUwyUnUPM3HbQo8QfmNx7+ltw8Pm5zLusl1XIfwcxo8DbWCqMGKaWeNxWA8yrx5v3SaVpMvR3CA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+
+		<style>
+	       .ui-autocomplete {
+	       		z-index: 999999;
+	            max-height: 200px;
+	            overflow-y: auto;
+	            /* prevent horizontal scrollbar */
+	            overflow-x: hidden;
+	            /* add padding to account for vertical scrollbar */
+	            padding-right: 20px;
+	        } 
+		</style>
+</head>
+	<body>
+	
+		<!-- Main Wrapper -->
+		<div class="main-wrapper">
+			<!-- Header -->
+			<?php $this->load->view("include/header"); ?>
+			<!-- /Header -->
+			
+			<!-- Sidebar -->
+			<?php $this->load->view("include/sidebar"); ?>
+			<!-- /Sidebar -->
+			
+			<!-- Page Wrapper -->
+			<div class="page-wrapper">
+				<div class="content container-fluid">
+				
+					<!-- Page Header -->
+					<div class="page-header">
+						<div class="row">
+							<div class="col-sm-10">
+								<h3 class="page-title">Kasa</h3>
+								<ul class="breadcrumb">
+									<li class="breadcrumb-item"><a href="<?= base_url();?>">Anasayfa</a></li>
+									<li class="breadcrumb-item">Kasa</li>
+									<li class="breadcrumb-item active">Kasa Virman Düzenle</li>
+								</ul>
+							</div>
+							<div class="d-flex justify-content-end text-align-center col-sm-2">
+		<a class="btn btn-outline-light" href="javascript:history.back()"><i class="fa fa-history"></i> <br>Önceki Sayfa</a>
+	</div>
+						</div>
+					</div>
+					<!-- /Page Header -->
+
+					<?php 
+						$anaHesap = anaHesapBilgisi();
+						$kaynakKasaQ = "SELECT * FROM kasa WHERE kasa_id = '$kaynak->kh_kasaID' AND kasa_olusturanAnaHesap ='$anaHesap' ";
+						$hedefKasaQ = "SELECT * FROM kasa WHERE kasa_id = '$hedef->kh_kasaID' AND kasa_olusturanAnaHesap ='$anaHesap' ";
+
+						$kaynakKasa = $this->db->query($kaynakKasaQ)->row();
+						$hedefKasa = $this->db->query($hedefKasaQ)->row();
+					?>
+					
+					<div class="row">
+						<div class="col-md-12">
+							<div class="card">
+								<div class="card-body">
+									<h4 class="card-title">İşlem Yapılacak Kasa Bilgileri</h4>
+									<form action="<?= base_url("kasa/mevcutKasaVirmanDuzenle"); ?>" method="POST">
+
+										<input type="hidden" name="virman_id" value="<?= $kaynak->kh_virmanID; ?>">
+
+										<!--<input type="hidden" name="kasa_id" id="kasa_id" value="<?= $kaynak->kh_kasaID; ?>">
+										<input type="hidden" name="kasa_id2" id="kasa_id2" value="<?= $hedef->kh_kasaID; ?>">-->
+
+										<div class="row">
+											<div class="col-md-4">
+												<div class="form-group">
+													<label>Belge No</label>
+													<input type="text" class="form-control" name="virman_belgeNo" required="" value="<?= $kaynak->kh_belgeNumarasi; ?>">
+												</div>
+											</div>
+											<?php
+											$vaults = getVaultsofCompany();
+											?>
+
+											<div class="col-md-8">
+												<div class="form-group">
+													<label>Kaynak Kasa</label>
+													<select class="form-control select" name="kasa_id">
+														<option value="">Seçiniz...</option>
+														<?php foreach($vaults as $va){?>
+															<option value="<?= $va->kasa_id; ?>" <?php if($kaynakKasa->kasa_id == $va->kasa_id){echo "selected";} ?>><?= $va->kasa_adi; ?></option>
+														<?php }?>
+													</select>
+												</div>
+											</div>
+
+											<!-- <div class="col-md-4">
+												<div class="form-group">
+													<label>Kaynak Kasa Adı</label>
+													<input type="text" class="form-control" name="virman_kaynakKasaAdi" required="" id="ad_input" value="<?= $kaynakKasa->kasa_adi; ?>">
+												</div>
+											</div>
+											<div class="col-md-4">
+												<div class="form-group">
+													<label>Kaynak Kasa Kodu</label>
+													<input type="text" class="form-control" name="virman_kaynakKasaKodu" required="" id="kod_input" value="<?= $kaynakKasa->kasa_kodu; ?>">
+												</div>
+											</div> -->
+											
+										</div>
+										<div class="row">
+											<div class="col-md-4">
+											</div>
+											<div class="col-md-8">
+												<div class="form-group">
+													<label>Hedef Kasa</label>
+													<select class="form-control select" name="kasa_id2">
+														<option value="">Seçiniz...</option>
+														<?php foreach($vaults as $va){?>
+															<option value="<?= $va->kasa_id; ?>" <?php if($hedefKasa->kasa_id == $va->kasa_id){echo "selected";} ?> ><?= $va->kasa_adi; ?></option>
+														<?php }?>
+													</select>
+													<!-- <input type="text" class="form-control" name="virman_hedefKasaAdi" required="" id="ad_input2"> -->
+												</div>
+											</div>
+											<!-- <div class="col-md-4">
+												<div class="form-group">
+													<label>Hedef Kasa Adı</label>
+													<input type="text" class="form-control" name="virman_hedefKasaAdi" required="" id="ad_input2" value="<?= $hedefKasa->kasa_adi; ?>">
+												</div>
+											</div>
+											<div class="col-md-4">
+												<div class="form-group">
+													<label>Hedef Kasa Kodu</label>
+													<input type="text" class="form-control" name="virman_hedefKasaKodu" required="" id="kod_input2" value="<?= $hedefKasa->kasa_kodu; ?>">
+												</div>
+											</div> -->
+										</div>
+
+										<?php 
+											$tarih = $kaynak->kh_tarih;
+
+											$yeni_tarih = date("d.m.Y", strtotime($tarih));
+										?>
+
+										<h4 class="card-title">İşlem Bilgileri</h4>
+										<div class="row">
+											<div class="col-md-4">
+												<div class="form-group">
+													<label>Tarih</label>
+													<input type="text" class="datepicker form-control" name="virman_tarih" required="" autocomplete="off" value="<?= $yeni_tarih; ?>">
+												</div>
+											</div>
+											<div class="col-md-8">
+												<div class="form-group">
+													<label>Tutar</label>
+													<input type="number" step="0.01" class="form-control" name="virman_tutar" required="" value="<?= $kaynak->kh_cikis; ?>">
+												</div>
+											</div>
+											<div class="col-md-12">
+												<div class="form-group">
+													<label>Açıklama</label>
+													<textarea class="form-control" name="virman_aciklama"><?= $kaynak->kh_aciklama; ?></textarea>
+												</div>
+											</div>
+										</div>
+										<button type="submit" class="btn btn-danger" style="width:100%;">Güncelle</button>
+									</form>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!-- /Page Wrapper -->
+			
+		</div>
+		<!-- /Main Wrapper -->
+
+
+<?php if ($this->session->flashdata('kasa_devir_ok')): ?>
+<script>
+swal({
+  title: "Bilgilendirme",
+  type: "success", 
+  text: "Kasa devir işlemi başarılı bir şekilde gerçekleştirildi.",
+  confirmButtonText:'Tamam',
+  button: false,
+  timer: 5000,
+});
+</script>
+<?php endif; ?>
+		
+<?php if ($this->session->flashdata('kasa_hatali')): ?>
+<script>
+swal({
+  title: "Bilgilendirme",
+  type: "error", 
+  text: "Kasa kodu veya kasa adı kayıtlı değil, lütfen listeden seçerek devam ediniz.",
+  confirmButtonText:'Tamam',
+  button: false,
+  timer: 5000,
+});
+</script>
+<?php endif; ?>
+
+<?php if ($this->session->flashdata('kasa_mukerrer')): ?>
+<script>
+swal({
+  title: "Bilgilendirme",
+  type: "error", 
+  text: "Aynı kasaya virman işlemi yapamazsınız, hedef ve kaynak kasaları farklı olarak seçip tekrar deneyiniz.",
+  confirmButtonText:'Tamam',
+  button: false,
+  timer: 5000,
+});
+</script>
+<?php endif; ?>
+
+<?php if ($this->session->flashdata('belge_no_mukerrer')): ?>
+<script>
+swal({
+  title: "Bilgilendirme",
+  type: "error", 
+  text: "Girilen belge numarası zaten daha önce kayıt edilmiş, tekrar deneyiniz.",
+  confirmButtonText:'Tamam',
+  button: false,
+  timer: 5000,
+});
+</script>
+<?php endif; ?>
+
+<?php if ($this->session->flashdata('kasa_eksi')): ?>
+<script>
+swal({
+  title: "Bilgilendirme",
+  type: "error", 
+  text: "Bu girişin ardından seçilen kaynak kasa eksi bakiyeye düşeceği için işlem iptal edildi, tekrar deneyiniz.",
+  confirmButtonText:'Tamam',
+  button: false,
+  timer: 5000,
+});
+</script>
+<?php endif; ?>
+
+<?php $this->load->view("include/footer-js"); ?>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js" integrity="sha512-VEd+nq25CkR676O+pLBnDW09R7VQX9Mdiij052gVCp5yVH3jGtH70Ho/UUv4mJDsEdTvqRCFZg0NKGiojGnUCw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+<script>
+$(function(){
+   $('.datepicker').datepicker({
+      dateFormat: 'dd.mm.yy',
+      language: 'tr'
+    });
+});
+</script>
+
+<script>
+	$(function() {
+	    $("#kod_input").autocomplete({
+	        source: "<?= env('BASE_URL'); ?>/kasa/autocompleteDataByCode",
+	        minLength: 2,
+	        select: function( event, ui ) {
+	            event.preventDefault();
+
+				toastr.success(ui.item.value+" kodlu kasaya ait bilgiler getirildi.");
+
+				$("#kasa_id").val(ui.item.id);
+            	$("#kod_input").val(ui.item.value);
+            	$("#ad_input").val(ui.item.kasa_adi);
+	        }
+	    });
+	});
+
+	$(function() {
+	    $("#ad_input").autocomplete({
+	        source: "<?= env('BASE_URL'); ?>/kasa/autocompleteDataByName",
+	        minLength: 2,
+	        select: function( event, ui ) {
+	            event.preventDefault();
+
+				toastr.success(ui.item.value+" adlı kasaya ait bilgiler getirildi.");
+
+				$("#kasa_id").val(ui.item.id);
+            	$("#ad_input").val(ui.item.value);
+            	$("#kod_input").val(ui.item.kasa_kodu);
+	        }
+	    });
+	});
+
+	$(function() {
+	    $("#kod_input2").autocomplete({
+	        source: "<?= env('BASE_URL'); ?>/kasa/autocompleteDataByCode",
+	        minLength: 2,
+	        select: function( event, ui ) {
+	            event.preventDefault();
+
+				toastr.success(ui.item.value+" kodlu kasaya ait bilgiler getirildi.");
+
+				$("#kasa_id2").val(ui.item.id);
+            	$("#kod_input2").val(ui.item.value);
+            	$("#ad_input2").val(ui.item.kasa_adi);
+	        }
+	    });
+	});
+
+	$(function() {
+	    $("#ad_input2").autocomplete({
+	        source: "<?= env('BASE_URL'); ?>/kasa/autocompleteDataByName",
+	        minLength: 2,
+	        select: function( event, ui ) {
+	            event.preventDefault();
+
+				toastr.success(ui.item.value+" adlı kasaya ait bilgiler getirildi.");
+
+				$("#kasa_id2").val(ui.item.id);
+            	$("#ad_input2").val(ui.item.value);
+            	$("#kod_input2").val(ui.item.kasa_kodu);
+	        }
+	    });
+	});
+</script>
+
+<script type="text/javascript">
+	$(document).ready(function(){
+		 $("form").submit(function() {
+				$(this).submit(function() {
+					return false;
+				});
+				return true;
+			}); 
+	}); 
+</script>
+
+	</body>
+</html>

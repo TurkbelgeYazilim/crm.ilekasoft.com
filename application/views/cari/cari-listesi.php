@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+	<?php $this->load->view("include/head-tags"); ?>
+	<style>
+	.btn.text-danger, .btn.btn-white.text-danger, .btn.btn-danger, .btn-danger {
+		color: #fff !important;
+	}
+	</style>
+</head>
+<body>
+
+<!-- Main Wrapper -->
+<div class="main-wrapper">
+
+	<!-- Header -->
+	<?php $this->load->view("include/header"); ?>
+	<!-- /Header -->
+
+	<!-- Sidebar -->
+	<?php $this->load->view("include/sidebar"); ?>
+	<!-- /Sidebar -->
+
+	<!-- Page Wrapper -->
+	<div class="page-wrapper">
+		<div class="content container-fluid">
+
+			<!-- Page Header -->
+
+			<?php
+
+			$firma = getirFirma();
+			$deletePermission = $firma->ayarlar_deletePermission;
+			?>
+			<div class="page-header">
+				<div class="row">
+					<div class="col-sm-10">
+						<h3 class="page-title">Cari</h3>
+						<ul class="breadcrumb">
+							<li class="breadcrumb-item"><a href="<?= base_url(); ?>">Anasayfa</a>
+							</li>
+							<li class="breadcrumb-item">Cari
+							</li>
+							<li class="breadcrumb-item active">Cari Listesi</li>
+						</ul>
+					</div>
+					<div class="d-flex justify-content-end text-align-center col-sm-2">
+						<a class="btn btn-outline-light" href="javascript:history.back()"><i class="fa fa-history"></i>
+							<br>Önceki Sayfa</a>
+					</div>
+				</div>
+			</div>
+			<!-- /Page Header -->
+			<?php
+			if ($_SERVER['QUERY_STRING']) {
+				$qs = "?" . $_SERVER['QUERY_STRING'];
+			}
+			?>
+			<div class="row">
+
+				<div class="col-xl-12 col-md-12">
+					<div class="card card-table">
+						<div class="card-header">
+							<div class="row">
+								<div class="col">
+									<h5 class="card-title">Cari Listesi</h5>
+								</div>
+								<div class="col-auto">
+									<a href="<?= base_url("cari/cariListesiExcel$qs"); ?>"
+									   class="btn btn-outline-success btn-sm"
+									   style='font-family: Arial, Helvetica, sans-serif;'><i
+												class="fa fa-file-excel"></i> Dışa aktar</a>
+								</div>
+								<div class="col-auto">
+									<a href="javascript:void(0);" class="btn btn-outline-danger btn-sm"
+									   data-toggle="modal" data-target="#add_category"><i class="fa fa-search"></i>
+										Arama</a>
+								</div>
+							</div>
+						</div>
+						<div class="card-body">
+							<div class="table-responsive">
+								<table class="table table-striped custom-table mb-0">
+									<thead>
+									<tr>
+										<th>Cari Kodu</th>
+										<th>Cari Adı</th>
+										<th>Cari Tipi</th>
+										<th>Cari Grubu</th>
+										<th>Vergi Dairesi</th>
+										<th>İl</th>
+										<th>B/A</th>
+										<th class="text-right">İşlem</th>
+									</tr>
+									</thead>
+									<tbody>
+									<?php 
+									    $tumBorc=0;
+									    $tumAlacak=0;
+									    foreach ($cari as $cr) {
+
+										$anaHesap = anaHesapBilgisi();
+
+										$alias_pk = $cr->cari_alias_pk;
+
+										$grubuq = "SELECT * FROM cariGruplari WHERE cariGrup_id = '$cr->cari_cariGrupKoduID'";
+										$grubuexe = $this->db->query($grubuq)->row();
+
+										$ilq = "SELECT * FROM iller WHERE id='$cr->cari_il'";
+										$ilexe = $this->db->query($ilq)->row();
+
+										/*$ilceq = "SELECT * FROM ilceler WHERE id='$cr->cari_ilce'";
+											$ilceexe = $this->db->query($ilceq)->row();*/
+
+										$cari_idsi = $cr->cari_id;
+
+										$toplamBorcQ = "SELECT SUM(ch_borc) AS toplamBorc FROM cariHareketleri WHERE ch_olusturanAnaHesap = '$anaHesap' AND ch_cariID = '$cari_idsi'";
+										$toplamBorcExe = $this->db->query($toplamBorcQ)->row();
+
+										$toplamAlacakQ = "SELECT SUM(ch_alacak) AS toplamAlacak FROM cariHareketleri WHERE ch_olusturanAnaHesap = '$anaHesap' AND ch_cariID = '$cari_idsi'";
+										$toplamAlacakExe = $this->db->query($toplamAlacakQ)->row();
+
+										$toplamBorc = $toplamBorcExe->toplamBorc;
+										$toplamAlacak = $toplamAlacakExe->toplamAlacak;
+										$kalan = $toplamBorc - $toplamAlacak;
+
+										$kalann = abs($kalan);
+										
+
+										if (filter_var($kalan, FILTER_VALIDATE_FLOAT) && $kalan > 0) {
+											$bakiye = '<a href="javascript:void(0);" class="btn btn-outline-success btn-sm">' . number_format($kalann, 2,",",".") . ' ₺ (B)</a>';
+										$tumBorc += $kalann;
+										} else {
+											$bakiye = '<a href="javascript:void(0);" class="btn btn-outline-danger btn-sm">' . number_format($kalann, 2,",",".") . ' ₺ (A)</a>';
+											
+										$tumAlacak += $kalann;
+										}
+                                        $toplamBakiye += $kalann;
+										?>
+										<tr>
+											<td>
+												<a href="<?= base_url("cari/cari-hareketleri?cari=$cr->cari_id"); ?>"><?= $cr->cari_kodu; ?></a>
+											</td>
+											<td>
+												<?php
+
+												if ($alias_pk != "") {
+													echo "<i class='fa fa-file-invoice text-dark' data-toggle='tooltip' data-placement='top' title='e-Fatura'></i>";
+												}
+
+												$lengthOfCariAd = strlen($cr->cari_ad);
+												if ($lengthOfCariAd >= 24) { ?>
+													<span data-toggle="tooltip" data-placement="top"
+														  title="<?= $cr->cari_ad; ?>"
+														  style="cursor:help;"><?php echo mb_substr($cr->cari_ad, 0, 24) . '...'; ?></span>
+												<?php } else {
+													echo $cr->cari_ad;
+												} ?>
+											</td>
+											<td><?php $cariTipi = $cr->cari_bireysel;
+												if ($cariTipi == 1) {
+													echo "Bireysel";
+												} elseif ($cariTipi == 0) {
+													echo "Kurumsal";
+												} elseif ($cariTipi == 2) {
+													echo "Diğer";
+												} ?></td>
+											<td><?= $grubuexe->cariGrup_ad; ?></td>
+											<td><?= $cr->cari_vergiDairesi; ?></td>
+											<td><?= $ilexe->il; ?></td>
+											<td><?= $bakiye; ?></td>
+											<td class="text-right">
+												<a href="<?= base_url("cari/cari-hareketleri?cari=$cr->cari_id"); ?>"
+												   class="btn btn-sm btn-white text-info mr-2"><i
+															class="far fa-eye mr-1"></i>Cari Hareketleri</a>
+												<a href="<?= base_url("raporlar/cari-stok-hareket-raporlari?cari=$cr->cari_id"); ?>"
+												   class="btn btn-sm btn-white text-dark mr-2"><i
+															class="fa fa-inbox mr-1"></i>Stok Hareketleri</a>
+												<a href="<?= base_url("cari/cari-karti-duzenle/$cr->cari_id"); ?>"
+												   class="btn btn-sm btn-white text-success mr-2"><i
+															class="far fa-edit mr-1"></i> Düzenle</a>
+												<?php if ($deletePermission == 1) { ?>
+													<a href="javascript:void(0);" data-toggle="modal"
+													   data-target="#cari_sil"
+													   onclick="document.getElementById('cari_id').value='<?= $cr->cari_id ?>';document.getElementById('cari_ad').innerHTML='Cari kodu <?= $cr->cari_kodu ?> olan cariyi pasif hale getirmek istediğinizden emin misiniz?';"
+													   class="btn btn-sm btn-white text-danger mr-2"><i
+																class="far fa-trash-alt mr-1"></i> Sil</a>
+												<?php } ?>
+												<!--
+												<a href="#" data-toggle="modal" data-target="#edit_category" class="btn btn-sm btn-white text-success mr-2"><i class="far fa-edit mr-1"></i> Düzenle</a>
+												<a href="#" data-toggle="modal" data-target="#delete_category" class="btn btn-sm btn-white text-danger mr-2"><i class="far fa-trash-alt mr-1"></i>Sil</a>
+												-->
+											</td>
+										</tr>
+									<?php } ?>
+									</tbody>
+								</table>
+								<hr>
+								<span style="margin-left:15px;">Toplam kayıt sayısı: <b><?= $count_of_list; ?></b></span>
+								<span style="margin-left:15px;">Toplam borç: <b><?= number_format($tumBorc, 2,",","."); ?></b></span>
+								<span style="margin-left:15px;">Toplam alacak: <b><?= number_format($tumAlacak, 2,",","."); ?></b></span>
+								<br><br>
+							</div>
+						</div>
+					</div>
+					<?php echo $links; ?>
+					<br><br>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- /Page Wrapper -->
+	<?php
+	$cariKodu = $this->input->get('cariKodu');
+	$cariAdi = $this->input->get('cariAdi');
+	$cariTipi = $this->input->get('bireysel');
+	$cariGrubu = $this->input->get('cariGrubu');
+	$bulunduguIl = $this->input->get('bulunduguIl');
+	$tarihAraligi = $this->input->get('tarihAraligi');
+	?>
+	<!-- Add Category Modal -->
+	<div id="add_category" class="modal custom-modal fade" role="dialog">
+		<div class="modal-dialog modal-dialog-centered" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title">Cari Kartı Arama</h5>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				<div class="modal-body">
+					<form action="<?= base_url("cari/cari-listesi"); ?>" method="GET">
+						<div class="form-group">
+							<label>Kayıt Tarihi Aralığına Göre </label>
+							<input class="form-control" id="daterange" type="text" name="tarihAraligi"
+								   value="<?= $tarihAraligi; ?>" autocomplete="off"/>
+						</div>
+						<div class="form-group">
+							<label>Cari Koduna Göre </label>
+							<input class="form-control" type="text" name="cariKodu" value="<?= $cariKodu; ?>"
+								   autocomplete="off">
+						</div>
+						<div class="form-group">
+							<label>Cari Adına Göre </label>
+							<input class="form-control" type="text" name="cariAdi" value="<?= $cariAdi; ?>"
+								   autocomplete="off">
+						</div>
+						<?php
+						$anaHesap = anaHesapBilgisi();
+						$cariGruplarq = "SELECT * FROM cariGruplari WHERE cariGrup_olusturanAnaHesap = '$anaHesap'";
+						$cariGruplare = $this->db->query($cariGruplarq)->result();
+						?>
+						<div class="form-group">
+							<label>Cari Tipine Göre</label>
+							<select name="bireysel" class="form-control">
+								<option value="">Cari tipi seçiniz...</option>
+								<option value="true" <?php if ($cariTipi == "true") {
+									echo "selected";
+								} ?>>Bireysel Müşteri
+								</option>
+								<option value="false" <?php if ($cariTipi == "false") {
+									echo "selected";
+								} ?>>Kurumsal Müşteri
+								</option>
+							</select>
+						</div>
+						<div class="form-group">
+							<label>Cari Grubuna Göre </label>
+							<select name="cariGrubu" class="form-control">
+								<option value="">Cari grup seçiniz...</option>
+								<?php foreach ($cariGruplare as $cg) { ?>
+									<option value="<?= $cg->cariGrup_id; ?>" <?php if ($cg->cariGrup_id == $cariGrubu) {
+										echo "selected";
+									} ?>><?= $cg->cariGrup_ad; ?></option>
+								<?php } ?>
+							</select>
+						</div>
+						<?php $iller = $this->vt->multiple("iller"); ?>
+						<div class="form-group">
+							<label>Bulunduğu İle Göre </label>
+							<select name="bulunduguIl" class="form-control">
+								<option value="">İl seçiniz...</option>
+								<?php foreach ($iller as $il) { ?>
+									<option value="<?= $il->id; ?>" <?php if ($il->id == $bulunduguIl) {
+										echo "selected";
+									} ?>><?= $il->il; ?></option>
+								<?php } ?>
+							</select>
+						</div>
+						<div class="submit-section">
+							<button class="btn btn-danger submit-btn">Ara</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+	<!-- /Add Category Modal -->
+
+
+	<!-- Modal Delete  -->
+	<div id="cari_sil" class="modal custom-modal fade" role="dialog">
+		<div class="modal-dialog modal-dialog-centered" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title">Cari Kartı Silme</h5>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				<div class="modal-body">
+					<form action="<?= base_url("cari/cari_sil"); ?>" method="GET">
+						<input type="hidden" name="cari_id" id="cari_id" value="">
+						<p id="cari_ad"></p>
+						<div class="submit-section">
+							<button class="btn btn-danger submit-btn">Evet</button>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+
+
+</div>
+<!-- /Main Wrapper -->
+
+<?php if ($this->session->flashdata('excel_ok')) : ?>
+	<script>
+		swal({
+			title: "Bilgilendirme",
+			type: "success",
+			text: "Excel dışa aktarma işlemi gerçekleştiriliyor.",
+			confirmButtonText: 'Tamam',
+			button: false,
+			timer: 5000,
+		});
+	</script>
+<?php endif; ?>
+<?php if ($this->session->flashdata('cari_sil_ok')) : ?>
+	<script>
+		swal({
+			title: "Bilgilendirme",
+			type: "success",
+			text: "Cari başarıyla pasif hale getirildi.",
+			confirmButtonText: 'Tamam',
+			button: false,
+			timer: 5000,
+		});
+	</script>
+<?php endif; ?>
+<?php $this->load->view("include/footer-js"); ?>
+<!-- Select2 JS -->
+<script src="<?= base_url(); ?>assets/plugins/select2/js/select2.min.js"></script>
+
+<script>
+	$(function () {
+		moment.locale('tr');
+		$('#daterange').daterangepicker({
+			opens: 'left',
+			autoUpdateInput: false
+		}, function (start, end, label) {
+			$('#daterange').val(start.format('DD.MM.YYYY') + ' - ' + end.format('DD.MM.YYYY'));
+			//console.log("A new date selection was made: " + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD'));
+		});
+	});
+</script>
+
+
+</body>
+
+</html>
