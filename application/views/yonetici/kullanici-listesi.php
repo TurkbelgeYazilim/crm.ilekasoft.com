@@ -2,6 +2,20 @@
 <html lang="tr">
 <head>
 		<?php $this->load->view("include/head-tags"); ?>
+		<style>
+		.text-purple {
+			color: #6f42c1 !important;
+		}
+		.btn-outline-purple {
+			color: #6f42c1;
+			border-color: #6f42c1;
+		}
+		.btn-outline-purple:hover {
+			color: #fff;
+			background-color: #6f42c1;
+			border-color: #6f42c1;
+		}
+		</style>
 </head>
 	<body>
 	
@@ -55,56 +69,60 @@
 									<div class="row">
 										<div class="col">
 											<h5 class="card-title">Kullanıcı Listesi</h5>
-										</div>
-										<div class="col-auto">
-											<a href="javascript:void(0);" class="btn btn-outline-danger btn-sm" data-toggle="modal" data-target="#add_category"><i class="fa fa-search"></i> Arama</a>
+										</div>										<div class="col-auto">
+											<a href="<?= base_url('yonetici/yeniKullaniciEkle'); ?>" class="btn btn-outline-purple btn-sm">
+        <i class="fa fa-plus"></i> Yeni Kullanıcı Ekle
+    </a>
+    <a href="javascript:void(0);" class="btn btn-outline-danger btn-sm" data-toggle="modal" data-target="#add_category"><i class="fa fa-search"></i> Arama</a>
 										</div>
 									</div>
 								</div>
 								<div class="card-body">
 									<div class="table-responsive">
-										<table class="table table-striped custom-table mb-0">
-											<thead>
-												<tr>
-													<th>e-Posta</th>
-													<th>Kullanıcı Adı</th>
-													<th>Ad Soyad</th>
-													<th>Yetki</th>
-													<th>Durum</th>
-													<th class="text-right">İşlem</th>
-												</tr>
-											</thead>
-											<tbody>
-												<?php foreach($kullanici as $kul){?>
-												<?php 
-													$yetki = $kul->kullanici_yetki;
-													$durum = $kul->kullanici_durum;
-
-													if($yetki == 1){$yetkiTxt = "Yönetici";}
-													else if($yetki == 2){$yetkiTxt = "Kullanıcı";}
-
-													if($durum == 1){$durumTxt = '<span class="badge bg-success-light">Aktif</span>';}
-													else if($durum == 2){$durumTxt = '<span class="badge bg-danger-light">Pasif</span>';}
-												?>
-												<tr>
-													<td><?= $kul->kullanici_eposta; ?></td>
-													<td><?= $kul->kullanici_kullaniciAdi; ?></td>
-													<td><?= $kul->kullanici_ad; ?> <?= $kul->kullanici_soyad;?></td>
-													<td><?= $yetkiTxt; ?></td>
-													<td><?= $durumTxt; ?></td>
-													<td class="text-right">
-														<?php if($kul->kullanici_id != $u_id && $kul->kullanici_yetki != 1){ ?>
-														<a href="<?= base_url("yonetici/kullanici-yetkileri-duzenle?kullanici=$kul->kullanici_id"); ?>"  class="btn btn-sm btn-white text-secondary mr-2"><i class="fa fa-key mr-1"></i> Kullanıcı Yetkileri</a>
-														<?php } ?>
-														<a href="<?= base_url("yonetici/mevcut-kullanici-duzenle/$kul->kullanici_id"); ?>"  class="btn btn-sm btn-white text-success mr-2"><i class="far fa-edit mr-1"></i> Düzenle</a> 
-														<!--
-														<a href="#" data-toggle="modal" data-target="#edit_category" class="btn btn-sm btn-white text-success mr-2"><i class="far fa-edit mr-1"></i> Düzenle</a> 
-														<a href="#" data-toggle="modal" data-target="#delete_category" class="btn btn-sm btn-white text-danger mr-2"><i class="far fa-trash-alt mr-1"></i>Sil</a>
-														-->
-													</td>
-												</tr>
-												<?php } ?>
-											</tbody>
+										<table class="table table-striped custom-table mb-0">											<thead>
+    <tr>
+        <th><a href="?sort=id&order=<?= ($this->input->get('sort')=='id' && $this->input->get('order')=='asc') ? 'desc' : 'asc' ?>">ID</a></th>
+        <th><a href="?sort=kullanici_eposta&order=<?= ($this->input->get('sort')=='kullanici_eposta' && $this->input->get('order')=='asc') ? 'desc' : 'asc' ?>">e-Posta</a></th>
+        <th><a href="?sort=sorumlu_mudur_ad&order=<?= ($this->input->get('sort')=='sorumlu_mudur_ad' && $this->input->get('order')=='asc') ? 'desc' : 'asc' ?>">Sorumlu Müdür</a></th>
+        <th><a href="?sort=kullanici_ad&order=<?= ($this->input->get('sort')=='kullanici_ad' && $this->input->get('order')=='asc') ? 'desc' : 'asc' ?>">Ad Soyad</a></th>
+        <th><a href="?sort=kg_adi&order=<?= ($this->input->get('sort')=='kg_adi' && $this->input->get('order')=='asc') ? 'desc' : 'asc' ?>">Yetki</a></th>
+        <th><a href="?sort=kullanici_durum&order=<?= ($this->input->get('sort')=='kullanici_durum' && $this->input->get('order')=='asc') ? 'desc' : 'asc' ?>">Durum</a></th>
+        <th class="text-right">İşlem</th>
+    </tr>
+</thead>
+<tbody>
+<?php foreach($kullanici as $kul){
+    $durum = $kul->kullanici_durum;
+    $yetkiTxt = !empty($kul->kg_adi) ? $kul->kg_adi : "Grup Atanmamış";
+    $btnClass = $durum == 1 ? 'btn-success' : 'btn-danger';
+    $btnText = $durum == 1 ? 'Aktif' : 'Pasif';
+    $newDurum = $durum == 1 ? 2 : 1;
+    $durumBtn = '<a href="'.base_url('yonetici/kullaniciDurumDegistir/'.$kul->kullanici_id.'/'.$newDurum).'" class="btn btn-sm '.$btnClass.'">'.$btnText.'</a>';
+    
+    // Sorumlu müdür bilgisi
+    $sorumluMudur = '';
+    if (!empty($kul->sorumlu_mudur_ad) && !empty($kul->sorumlu_mudur_soyad)) {
+        $sorumluMudur = $kul->sorumlu_mudur_ad . ' ' . $kul->sorumlu_mudur_soyad;
+    } else {
+        $sorumluMudur = '<span class="text-muted">Atanmamış</span>';
+    }
+?>
+<tr>
+    <td><?= $kul->kullanici_id; ?></td>
+    <td><?= $kul->kullanici_eposta; ?></td>
+    <td><?= $sorumluMudur; ?></td>
+    <td><?= $kul->kullanici_ad; ?> <?= $kul->kullanici_soyad;?></td>
+    <td><?= $yetkiTxt; ?></td>
+    <td><?= $durumBtn; ?></td>    <td class="text-right">
+        <a href="<?= base_url('yonetici/mevcutKullaniciDuzenle/'.$kul->kullanici_id); ?>"  class="btn btn-sm btn-white text-purple mr-2"><i class="far fa-edit mr-1"></i> Düzenle</a>
+        <!--
+        <a href="#" data-toggle="modal" data-target="#edit_category" class="btn btn-sm btn-white text-purple mr-2"><i class="far fa-edit mr-1"></i> Düzenle</a> 
+        <a href="#" data-toggle="modal" data-target="#delete_category" class="btn btn-sm btn-white text-danger mr-2"><i class="far fa-trash-alt mr-1"></i>Sil</a>
+        -->
+    </td>
+</tr>
+<?php } ?>
+</tbody>
 										</table>
 										<hr>
 <span style="margin-left:15px;">Toplam kayıt sayısı:</span> <b><?= $count_of_list; ?></b>

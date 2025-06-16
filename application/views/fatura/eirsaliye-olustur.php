@@ -18,9 +18,8 @@
 		.form-group {
 			margin-bottom: 10px !important;
 		}
-
 		.card {
-		. margin-bottom: 0 px !important;
+			margin-bottom: 0px !important;
 		}
 	</style>
 
@@ -160,9 +159,7 @@
 										 id="faturaBilgisiDiv" <?php if (!$faturaDetay) echo "style='display:none;'"; ?>>
 										<div class="col-12">
 											<div class="row">
-												<div class="col-md-7">
-
-													<div class="col-md-12">
+												<div class="col-md-7">													<div class="col-md-12" style="display: none;">
 														<div class="form-group row">
 															<label class="col-sm-3 text-sm-left pt-2">Tip</label>
 															<div class="col-sm-9">

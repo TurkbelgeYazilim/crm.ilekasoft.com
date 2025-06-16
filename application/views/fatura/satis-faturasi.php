@@ -5,7 +5,6 @@
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css"
 		  integrity="sha512-vKMx8UnXk60zUwyUnUPM3HbQo8QfmNx7+ltw8Pm5zLusl1XIfwcxo8DbWCqMGKaWeNxWA8yrx5v3SaVpMvR3CA=="
 		  crossorigin="anonymous" referrerpolicy="no-referrer"/>
-
 	<style>
 		.ui-autocomplete {
 			z-index: 999999;
@@ -20,9 +19,23 @@
 		.form-group {
 			margin-bottom: 10px !important;
 		}
-
 		.card {
-		. margin-bottom: 0 px !important;
+			margin-bottom: 0px !important;
+		}
+				/* Hide Stok Kodu (Stock Code) and Birim (Unit) columns */
+		#my_table th:nth-child(2), /* Stok Kodu header */
+		#my_table td:nth-child(2), /* Stok Kodu data cells */
+		#my_table th:nth-child(3), /* Birim header */
+		#my_table td:nth-child(3) { /* Birim data cells */
+			display: none !important;
+		}
+		
+		/* Mobile specific styles - Miktar kutucuğunu küçült */
+		@media (max-width: 768px) {
+			input[name^="miktar"] {
+				width: 60px !important;
+				min-width: 60px !important;
+			}
 		}
 	</style>
 
@@ -67,10 +80,10 @@ $modulSorgula = modulSorgula($firma_ID, 1);
 			<div class="page-header">
 				<div class="row">
 					<div class="col-sm-10">
-						<h3 class="page-title">Fatura</h3>
+						<h3 class="page-title">Satış Sözleşmesi Oluştur</h3>
 						<ul class="breadcrumb">
 							<li class="breadcrumb-item"><a href="<?= base_url(); ?>">Anasayfa</a></li>
-							<li class="breadcrumb-item">Fatura</li>
+							<li class="breadcrumb-item">Sözleşme</li>
 							<li class="breadcrumb-item active">Satış Sözleşmesi Oluştur</li>
 						</ul>
 					</div>
@@ -177,10 +190,9 @@ $modulSorgula = modulSorgula($firma_ID, 1);
 										 id="faturaBilgisiDiv" <?php if (!$faturaDetay) echo "style='display:none;'"; ?>>
 										<div class="col-12">
 											<div class="row">
-												<div class="col-md-7">
-													<div class="col-md-12">
+												<div class="col-md-7">													<div class="col-md-12">
 														<div class="form-group row">
-															<label class="col-sm-3 text-sm-left pt-2">Sözleşme No</label>
+															<label class="col-sm-3 text-sm-left pt-2">Sözleşme No <span style="color: red;">*</span></label>
 															<div class="col-sm-9">
 																<input type="text" class="form-control"
 																	   name="satis_faturaNo"
@@ -189,8 +201,7 @@ $modulSorgula = modulSorgula($firma_ID, 1);
 															</div>
 
 														</div>
-													</div>
-													<div class="col-md-12">
+													</div><div class="col-md-12" style="display: none;">
 														<div class="form-group row">
 															<label class="col-sm-3 text-sm-left pt-2">Tip</label>
 															<div class="col-sm-9" id="satis_faturaTip_div">
@@ -291,9 +302,7 @@ $modulSorgula = modulSorgula($firma_ID, 1);
 																	   id="datetimepicker"/>
 															</div>
 														</div>
-													</div>
-
-													<div class="col-md-12">
+													</div>													<div class="col-md-12" style="display: none;">
 														<div class="form-group row">
 															<label class="col-sm-3 text-sm-left pt-2">Etiket</label>
 															<div class="col-sm-9">
@@ -317,11 +326,9 @@ $modulSorgula = modulSorgula($firma_ID, 1);
 										 id="checkboxDiv"<?php if (!$faturaDetay) echo "style='display:none;'"; ?>>
 										<div class="row pl-4">
 
-											<div class="col-md-4">
-
-												<input class="form-check-input" type="checkbox" value="1"
+											<div class="col-md-4">												<input class="form-check-input" type="checkbox" value="1"
 													   id="kdvCheck" onchange="kdvCheckFunc()"
-													   name="kdvCheck" style="width:30px;height:20px;">
+													   name="kdvCheck" style="width:30px;height:20px;" checked>
 												<label class="form-check-label ml-3" for="kdvCheck">
 													KDV Dahil
 												</label>
@@ -786,13 +793,12 @@ $modulSorgula = modulSorgula($firma_ID, 1);
 																  name="satis_aciklama"><?= $faturaDetay->satis_aciklama ?></textarea>
 													</div>
 												</div>
-											</div>
-											<!-- Dosya Yükleme Alanı -->
+											</div>											<!-- Dosya Yükleme Alanı -->
 											<div class="row">
 												<div class="col-md-12">
 													<div class="form-group">
-														<label>Satış sözleşmesini lütfen buraya yükleyiniz</label>
-														<input type="file" class="form-control" name="fatura_dosya[]" multiple accept="*/*">
+														<label>Satış sözleşmesini lütfen buraya yükleyiniz <span style="color: red;">*</span></label>
+														<input type="file" class="form-control" name="fatura_dosya[]" multiple accept="*/*" required>
 													</div>
 												</div>
 											</div>
@@ -853,12 +859,12 @@ $modulSorgula = modulSorgula($firma_ID, 1);
 					<input class="form-control" type="hidden" id="stokID" name="stokID">
 					<div class="form-group">
 						<label>Stok Adına Göre <span class="text-danger">*</span></label>
-						<input class="form-control" type="text" id="stokAdi" name="stokAdi" required="">
+						<input class="form-control" type="text" id="stokAdi" name="stokAdi" required=""/>
 					</div>
 
 					<div class="form-group">
 						<label>Stok Koduna Göre <span class="text-danger">*</span></label>
-						<input class="form-control" type="text" id="stokKodu" name="stokKodu" required="">
+						<input class="form-control" type="text" id="stokKodu" name="stokKodu" required=""/>
 					</div>
 
 					<div class="submit-section">
@@ -914,7 +920,7 @@ $modulSorgula = modulSorgula($firma_ID, 1);
 								<div class="form-group">
 									<label>Vergi Dairesi</label>
 									<input type="text" class="form-control" name="cari_vergiDairesi"
-										   id="vergiDairesi" autocomplete="off" required="">
+										   id="vergiDairesi" autocomplete="off" required=""/>
 								</div>
 							</div>
 
@@ -1193,7 +1199,6 @@ $modulSorgula = modulSorgula($firma_ID, 1);
 
 				$html .= '<td><label>Hesap No</label><input type="text" class="form-control" name="ayarlar_hesapno[]" id="ayarlar_hesapno' . $items_banka . '"  value="' . $item->ayarlarbanka_hesapNo . '"></td>';
 				$html .= '<td><label>IBAN</label><input type="text" class="form-control" name="ayarlar_iban[]" id="ayarlar_iban' . $items_banka . '"  value="' . $item->ayarlarbanka_iban . '"></td>';
-
 				$html .= '<td><button type="button" onclick="deleteRowBanka(this);" class="btn btn-danger btn-sm" id="' . $items_banka . '"><i class="fa fa-trash"></i> Sil</button></td>';
 				$html .= "</tr>";
 				echo 'row=document.getElementById("tbody_ayarlarbanka").insertRow();row.innerHTML=\'' . $html . '\';';
@@ -1218,7 +1223,6 @@ $modulSorgula = modulSorgula($firma_ID, 1);
 
 				$html .= '<td><label>Hesap No</label><input type="text" class="form-control" name="ayarlar_hesapno[]" id="ayarlar_hesapno' . $items_banka . '"  value="' . $itemx->ayarlarbanka_hesapNo . '"></td>';
 				$html .= '<td><label>IBAN</label><input type="text" class="form-control" name="ayarlar_iban[]" id="ayarlar_iban' . $items_banka . '"  value="' . $itemx->ayarlarbanka_iban . '"></td>';
-
 				$html .= '<td><button type="button" onclick="deleteRowBanka(this);" class="btn btn-danger btn-sm" id="' . $items_banka . '"><i class="fa fa-trash"></i> Sil</button></td>';
 				$html .= "</tr>";
 				echo 'row=document.getElementById("tbody_ayarlarbanka").insertRow();row.innerHTML=\'' . $html . '\';';
@@ -1252,16 +1256,15 @@ $modulSorgula = modulSorgula($firma_ID, 1);
 			$("#birim" + id).css("background-color", "#e9ecef");
 		}
 	}
-
 	function addItem() {
 
 		items++;
 		counter.push(items);
 		var html = "<tr>";
 		html += "<td><input type='text' class='form-control' name='stokadi[]' id='stokadi" + items + "' onblur='stokKontrol(this.id)' required> </td>";
-		html += "<td><input type='text' class='form-control' name='stokkodu[]' id='stokkodu" + items + "'  onblur='stokKontrol(this.id)' required></td>";
+		html += "<td style='display:none'><input type='text' class='form-control' name='stokkodu[]' id='stokkodu" + items + "'  onblur='stokKontrol(this.id)' required></td>";
 		// Barkod inputu kaldırıldı
-		html += "<td><select class='form-control' name='birim[]' id='birim" + items + "' required><?= $birimler ?></select></td>";
+		html += "<td style='display:none'><select class='form-control' name='birim[]' id='birim" + items + "' required><?= $birimler ?></select></td>";
 		html += "<td><input type='number' step='0.1' class='form-control' autocomplete='off' name='miktar[]' id='miktar" + items + "' required='' style='width:175px;'></td>";
 		html += "<td><input type='number' step='0.1' class='form-control'   autocomplete='off' name='birimfiyat[]' id='birimfiyat" + items + "' required='' ></td>";
 		/*html += "<td><input type='text' class='form-control' name='kdv[]' id='kdv"+items+"' readonly></td>";*/
@@ -2093,7 +2096,7 @@ $modulSorgula = modulSorgula($firma_ID, 1);
 		}
 
 	});
-
+	
 
 	function addItemIade() {
 		items_iade++;
@@ -2309,178 +2312,6 @@ $modulSorgula = modulSorgula($firma_ID, 1);
 </script>
 
 <script>
-	$("#cariBireysel").on('change', function () {
-		var status = $("#cariBireysel option:selected").text();
-
-		$("#cari_input").css("display", "block");
-		$("#c_soyad").css("display", "none");
-
-		if (status == "Bireysel Müşteri") {
-
-			$("#vergiDairesi").prop('required', false);
-			$("#cariSoyad").prop('required', false);
-			$("#vergiNumarasi").prop('readonly', false);
-
-			$("#vergiDairesi").val("");
-			$("#vergiNumarasi").val("");
-			$("#alias_pk").val("");
-			$("#cari_kodu").val("");
-			$("#cariAd").val("");
-
-		} else if (status == "Kurumsal Müşteri") {
-
-			$("#vergiDairesi").prop('required', false);
-
-			$("#vergiNumarasi").prop('readonly', false);
-			$("#vergiDairesi").val("");
-			$("#vergiNumarasi").val("");
-			$("#alias_pk").val("");
-			$("#cari_kodu").val("");
-			$("#cariAd").val("");
-
-		} else if (status == "Diğer") {
-
-			$("#vergiDairesi").prop('required', false);
-
-			$("#vergiNumarasi").prop('readonly', true);
-			$("#vergiDairesi").val("");
-			$("#vergiNumarasi").val("11111111111");
-			$("#alias_pk").val("");
-			$("#cari_kodu").val("");
-			$("#cariAd").val("");
-
-		}
-	});
-/*
-	$("#vergiNumarasi").on('blur', function () {
-		let str = $("#vergiNumarasi").val();
-		if (str.length == 11) {
-			$("#c_soyad").css("display", "block");
-			var titleSplit = title.trim().split(' ');
-							$("#cariSoyad").val(titleSplit[titleSplit.length - 1]);
-							var ad = "";
-							for (var i = 0; i < titleSplit.length - 1; i++) {
-								ad += titleSplit[i] + " ";
-							}
-							$("#cariAd").val(ad.trim());
-							$('#cariSoyad').prop('disabled', true);
-		} else {
-			$("#cariAd").val(title);
-		}
-	});
-*/
-
-
-	$("#vergiNumarasi").on('blur', function () {
-
-		let str = $("#vergiNumarasi").val();
-
-		$("#cariSoyad").val("");
-		$("#cariAd").val("")
-		if (str.length == 11) {
-			$("#c_soyad").css("display", "block");
-			$("#cariSoyad").prop('required', true);
-			$("#vergiDairesi").prop('required', false);
-		} else {
-
-			$("#vergiDairesi").prop('required', true);
-			$("#c_soyad").css("display", "none");
-			$("#cariSoyad").prop('required', false);
-		}
-
-		if (str.length == 10 || str.length == 11) {
-			$.ajax({
-				url: "<?= env('BASE_URL'); ?>/Cari/gibVknTcknSorgula",
-				method: "POST",
-				data: {vergiNumarasi: str},
-				dataType: 'json',
-				beforeSend: function () {
-					$("#loading-image").show();
-					$(':input[type="submit"]').prop('disabled', true);
-				},
-				success: function (result) {
-					;
-					if (str.length == 11) {
-						let ad = result.ad;
-						let soyad = result.soyad;
-						$("#c_soyad").css("display", "block");
-						$("#cariAd").val(ad);
-						$("#cariSoyad").val(soyad);
-					} else {
-						$("#c_soyad").css("display", "none");
-						$("#cariAd").val(result.unvan);
-					}
-
-					$(':input[type="submit"]').prop('disabled', false);
-					$("#loading-image").hide();
-				}
-			});
-
-			<?php if($modulSorgula) { ?>
-			$.ajax({
-				url: "<?= env('BASE_URL'); ?>/Edonusum/Auth/CheckUser",
-				method: "POST",
-				data: {vergiNumarasi: str},
-				dataType: 'json',
-				beforeSend: function () {
-					$("#loading-image").show();
-					$(':input[type="submit"]').prop('disabled', true);
-				},
-				success: function (result) {
-					let alias = result.alias;
-					if (alias != null) {
-						$("#alias_pk").val(alias);
-						$("#mukellef_mark").css("display", "block");
-
-					} else {
-						$("#alias_pk").val("");
-						$("#mukellef_mark").css("display", "none");
-					}
-					$(':input[type="submit"]').prop('disabled', false);
-					$("#loading-image").hide();
-				}
-			});
-			<?php } ?>
-
-
-
-		}
-	});
-
-
-	$("#cari_eposta").on('blur', function () {
-		var eposta = $("#cari_eposta").val();
-		var regex = /^([a-zA-Z0-9_\.\-\+])+\@(([a-zA-Z0-9\-])+\.)+([a-zA-Z0-9]{2,4})+$/;
-		if (!regex.test(eposta)) {
-			toastr.warning("Geçerli bir e-posta giriniz.");
-			if (document.getElementById("cari_eposta").required == true)
-				$("#kydtBTN").prop("disabled", true);
-		} else {
-			$("#kydtBTN").prop('disabled', false);
-		}
-	});
-
-	$(document).ready(function () {
-		$("#il").select2({
-			width: '100%'
-		});
-		$("#cariGrupKodu").select2({
-			width: '100%'
-		});
-
-
-		$("form").submit(function () {
-			$(this).submit(function () {
-				return false;
-			});
-			return true;
-		});
-	});
-</script>
-
-<script>
-
-
 	$("#cariBireysel").on('change', function () {
 		var status = $("#cariBireysel option:selected").text();
 

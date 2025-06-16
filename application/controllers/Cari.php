@@ -115,9 +115,7 @@ class Cari extends CI_Controller
 
 		//logekle(1,1);
 		$this->load->view("cari/cari-karti-olustur", $data);
-	}
-
-	public function yeniCariKartiOlustur()
+	}	public function yeniCariKartiOlustur()
 	{
 		$control2 = session("r", "login_info");
 		$u_id = $control2->kullanici_id;
@@ -139,15 +137,22 @@ class Cari extends CI_Controller
 		} else {
 			$cariEInvoiceType = 1;
 		}
-
 		$cariKoduLen = strlen($cariKodu);
 		$cariVergiNoLen = strlen($cariVergiNo);
-		//$tcknLen = strlen($tckn);
-
-		if ($cariKoduLen < 3) {
-			$this->session->set_flashdata('cari_kodu_3_karakter', 'OK');
-			redirect("cari/cari-karti-olustur");
-			die;
+		
+		// Cari Kodu boşsa otomatik oluştur
+		if (empty($cariKodu) || $cariKoduLen < 3) {
+			// Son cari kodunu bul ve +1 artırarak yeni kod oluştur
+			$sonCariKoduQ = "SELECT cari_kodu FROM cari WHERE cari_olusturanAnaHesap = '$anaHesap' AND cari_kodu REGEXP '^[0-9]+$' ORDER BY CAST(cari_kodu AS UNSIGNED) DESC LIMIT 1";
+			$sonCariKodu = $this->db->query($sonCariKoduQ)->row();
+			
+			if ($sonCariKodu) {
+				$yeniKodNumara = intval($sonCariKodu->cari_kodu) + 1;
+			} else {
+				$yeniKodNumara = 1;
+			}
+			
+			$cariKodu = str_pad($yeniKodNumara, 3, '0', STR_PAD_LEFT);
 		}
 		/*
 				if($cariTipi == 0) {
@@ -186,10 +191,10 @@ class Cari extends CI_Controller
 		$data["cari_kodu"] = mb_strtoupper($cariKodu, "UTF-8");;
 		$data["cari_ad"] = mb_strtoupper(postval("cari_ad"), "UTF-8");
 		$data["cari_soyad"] = mb_strtoupper(postval("cari_soyad"), "UTF-8");
-		$data["cari_vergiDairesi"] = mb_strtoupper(postval("cari_vergiDairesi"), "UTF-8");
-		/*		$data["cari_vergiNumarasi"] = $cariVergiNo;
+		$data["cari_vergiDairesi"] = mb_strtoupper(postval("cari_vergiDairesi"), "UTF-8");		/*		$data["cari_vergiNumarasi"] = $cariVergiNo;
 				$data["cari_tckn"] = $tckn;*/
 		$data["cari_cariGrupKoduID"] = postval("cari_cariGrupKoduID");
+		$data["cari_ulke"] = postval("cari_ulke");
 		$data["cari_il"] = postval("cari_il");
 		$data["cari_ilce"] = postval("cari_ilce");
 		$data["cari_websitesi"] = postval("cari_websitesi");
@@ -199,12 +204,53 @@ class Cari extends CI_Controller
 		$data["cari_olusturan"] = $u_id;
 		$data["cari_olusturanAnaHesap"] = $anaHesap;
 		$data["cari_olusturmaTarihi"] = $tarihi;
-		$data["cari_olusturmaSaati"] = $saati;
-		$data["cari_bireysel"] = $cariTipi;
+		$data["cari_olusturmaSaati"] = $saati;		$data["cari_bireysel"] = $cariTipi;
 		$data["cari_EInvoiceType"] = $cariEInvoiceType;
-		$data["cari_alias_pk"] = $alias_pk;
-
-		$cariKoduVarmiQ = "SELECT * FROM cari WHERE cari_kodu = '$cariKodu' AND cari_olusturanAnaHesap = '$anaHesap' AND cari_durum=true";
+		$data["cari_alias_pk"] = $alias_pk;		// Handle file upload for photos
+		$fotograf_dosyalar = [];
+		if (!empty($_FILES['cari_fotograflar']['name'][0])) {
+			$count = count($_FILES['cari_fotograflar']['name']);
+			$gorsel_dir = FCPATH . 'assets/uploads/cariler/gorseller/';
+			if (!is_dir($gorsel_dir)) { 
+				mkdir($gorsel_dir, 0777, true); 
+			}
+			for ($i = 0; $i < $count; $i++) {
+				if ($_FILES['cari_fotograflar']['error'][$i] == 0) {
+					$tmp_name = $_FILES['cari_fotograflar']['tmp_name'][$i];
+					$original_name = $_FILES['cari_fotograflar']['name'][$i];
+					$name = uniqid('foto_') . '_' . basename($original_name);
+					$target_path = $gorsel_dir . $name;
+					if (move_uploaded_file($tmp_name, $target_path)) {
+						$fotograf_dosyalar[] = 'cariler/gorseller/' . $name;
+					}
+				}
+			}
+		}
+		if (count($fotograf_dosyalar) > 0) {
+			$data['fotograf_dosya'] = implode(',', $fotograf_dosyalar);
+		}		// Handle file upload for documents
+		$evrak_dosyalar = [];
+		if (!empty($_FILES['cari_dosya']['name'][0])) {
+			$count = count($_FILES['cari_dosya']['name']);
+			$evrak_dir = FCPATH . 'assets/uploads/cariler/evraklar/';
+			if (!is_dir($evrak_dir)) { 
+				mkdir($evrak_dir, 0777, true); 
+			}
+			for ($i = 0; $i < $count; $i++) {
+				if ($_FILES['cari_dosya']['error'][$i] == 0) {
+					$tmp_name = $_FILES['cari_dosya']['tmp_name'][$i];
+					$original_name = $_FILES['cari_dosya']['name'][$i];
+					$name = uniqid('evrak_') . '_' . basename($original_name);
+					$target_path = $evrak_dir . $name;
+					if (move_uploaded_file($tmp_name, $target_path)) {
+						$evrak_dosyalar[] = 'cariler/evraklar/' . $name;
+					}
+				}
+			}
+		}
+		if (count($evrak_dosyalar) > 0) {
+			$data['evrak_dosya'] = implode(',', $evrak_dosyalar);
+		}		$cariKoduVarmiQ = "SELECT * FROM cari WHERE cari_kodu = '$cariKodu' AND cari_olusturanAnaHesap = '$anaHesap' AND cari_durum=true";
 		$cariKoduVarmi = $this->db->query($cariKoduVarmiQ)->row();
 
 		$page = postval("page");
@@ -361,10 +407,10 @@ class Cari extends CI_Controller
 
 		$data["cari_kodu"] = mb_strtoupper($cariKodu, "UTF-8");
 		$data["cari_ad"] = mb_strtoupper(postval("cari_ad"), "UTF-8");
-		$data["cari_vergiDairesi"] = mb_strtoupper(postval("cari_vergiDairesi"), "UTF-8");
-		/*$data["cari_vergiNumarasi"] = postval("cari_vergiNumarasi");
+		$data["cari_vergiDairesi"] = mb_strtoupper(postval("cari_vergiDairesi"), "UTF-8");		/*$data["cari_vergiNumarasi"] = postval("cari_vergiNumarasi");
 		$data["cari_tckn"] = postval("cari_vergiNumarasi");*/
 		$data["cari_cariGrupKoduID"] = postval("cari_cariGrupKoduID");
+		$data["cari_ulke"] = postval("cari_ulke");
 		$data["cari_il"] = postval("cari_il");
 		$data["cari_ilce"] = postval("cari_ilce");
 		$data["cari_websitesi"] = postval("cari_websitesi");
@@ -391,7 +437,6 @@ class Cari extends CI_Controller
 	{
 		$data["baslik"] = "Cari / Cari Listesi";
 		$anaHesap = anaHesapBilgisi();
-
 		$cariKodu = $this->input->get('cariKodu');
 		$cariAdi = $this->input->get('cariAdi');
 		$cariTipi = $this->input->get('bireysel');
@@ -407,56 +452,39 @@ class Cari extends CI_Controller
 		$tarihGet = $this->input->get('tarihAraligi');
 
 		$tarihAraligi = explode(' - ', $tarihGet);
-
-		$tarih1 = date('Y-m-d', strtotime($tarihAraligi[0])); //küçük tarih
-		$tarih2 = date('Y-m-d', strtotime($tarihAraligi[1])); //büyük tarih
+		$tarih1 = date('Y-m-d', strtotime($tarihAraligi[0]));
+		$tarih2 = date('Y-m-d', strtotime($tarihAraligi[1]));
 
 		$urim = $this->uri->segment(2);
-
-		$segment = 2;
-		$sayfa = $this->input->get("sayfa");
-
+		$segment = 2;		$sayfa = $this->input->get("sayfa");
 		$page = $sayfa ? $sayfa : 0;
 		$limit = 20;
-
-		if ($sayfa) {
-			$pagem = ($page - 1) * $limit;
-		} else {
-			$pagem = 0;/*logekle(2,1);*/
-		}
+		$pagem = $sayfa ? ($page - 1) * $limit : 0;
 
 		if ((isset($cariKodu) && !empty($cariKodu)) || (isset($cariAdi) && !empty($cariAdi)) || (isset($cariGrubu) && !empty($cariGrubu)) || (isset($bulunduguIl) && !empty($bulunduguIl)) || (isset($tarihGet) && !empty($tarihGet)) || ($cariTipi != 2)) {
-
 			if (!empty($cariGrubu)) {
 				$sorgu1 = "AND cari_cariGrupKoduID = '$cariGrubu'";
 			} else {
 				$sorgu1 = "";
 			}
-
 			if (!empty($bulunduguIl)) {
 				$sorgu2 = "AND cari_il = '$bulunduguIl'";
 			} else {
 				$sorgu2 = "";
 			}
-
 			if (!empty($tarihGet)) {
 				$sorgu3 = "AND cari_olusturmaTarihi BETWEEN '$tarih1' AND '$tarih2'";
 			} else {
 				$sorgu3 = "";
 			}
-
 			if (!empty($cariTipi)) {
 				$sorgu4 = "AND cari_bireysel = '$cariTipi2'";
 			} else {
 				$sorgu4 = "";
-			}
-
-			$countq = "SELECT COUNT(*) as total FROM cari WHERE cari_olusturanAnaHesap = '$anaHesap' AND cari_kodu LIKE '%$cariKodu%' AND cari_ad LIKE '%$cariAdi%' " . $sorgu1 . " " . $sorgu2 . " " . $sorgu3 . " " . $sorgu4 . " ";
+			}			$countq = "SELECT COUNT(*) as total FROM cari WHERE cari_olusturanAnaHesap = '$anaHesap' AND cari_kodu LIKE '%$cariKodu%' AND cari_ad LIKE '%$cariAdi%' $sorgu1 $sorgu2 $sorgu3 $sorgu4";
 			$countexe = $this->db->query($countq)->row();
 			$count = $countexe->total;
-
-			$sorgu = "SELECT * FROM cari WHERE cari_olusturanAnaHesap = '$anaHesap' AND cari_durum=true AND cari_kodu LIKE '%$cariKodu%' AND cari_ad LIKE '%$cariAdi%' " . $sorgu1 . " " . $sorgu2 . " " . $sorgu3 . " " . $sorgu4 . " ORDER BY cari_id DESC LIMIT $pagem,$limit";
-
+			$sorgu = "SELECT * FROM cari WHERE cari_olusturanAnaHesap = '$anaHesap' AND cari_durum=true AND cari_kodu LIKE '%$cariKodu%' AND cari_ad LIKE '%$cariAdi%' $sorgu1 $sorgu2 $sorgu3 $sorgu4 ORDER BY cari_id DESC LIMIT $pagem,$limit";
 		} else {
 			$countq = "SELECT COUNT(*) as total FROM cari WHERE cari_olusturanAnaHesap = '$anaHesap' AND cari_durum=true";
 			$countexe = $this->db->query($countq)->row();
@@ -465,9 +493,7 @@ class Cari extends CI_Controller
 		}
 
 		$data["count_of_list"] = $count;
-
 		$this->load->library("pagination");
-
 		$config = array();
 		$config["base_url"] = base_url() . "/cari/$urim";
 		$config["total_rows"] = $count;
@@ -479,37 +505,27 @@ class Cari extends CI_Controller
 		$config['reuse_query_string'] = TRUE;
 		$config['query_string_segment'] = 'sayfa';
 		$config['num_links'] = 9;
-
 		$config['full_tag_open'] = '<div class="d-flex justify-content-center"><ul class="pagination">';
 		$config['full_tag_close'] = '</ul></div>';
-
 		$config['num_tag_open'] = '<span class="page-link"><li class="page-item">';
 		$config['num_tag_close'] = '</li></span>';
-
 		$config['cur_tag_open'] = '<span class="page-link"><li class="page-item active">';
 		$config['cur_tag_close'] = '</li></span>';
-
 		$config['first_link'] = '&laquo;&laquo;';
 		$config['first_tag_open'] = '<span class="page-link"><li class="page-item">';
 		$config['first_tag_close'] = '</li></span>';
-
 		$config['last_link'] = '&raquo;&raquo;';
 		$config['last_tag_open'] = '<span class="page-link"><li class="page-item">';
 		$config['last_tag_close'] = '</li></span>';
-
 		$config['prev_link'] = '&laquo;';
 		$config['prev_tag_open'] = '<span class="page-link"><li class="page-item">';
 		$config['prev_tag_close'] = '</li></span>';
-
 		$config['next_link'] = '&raquo;';
 		$config['next_tag_open'] = '<span class="page-link"><li class="page-item">';
 		$config['next_tag_close'] = '</li></span>';
-
 		$this->pagination->initialize($config);
-
 		$data["links"] = $this->pagination->create_links();
 		$data["cari"] = $this->db->query($sorgu)->result();
-
 		$this->load->view("cari/cari-listesi", $data);
 	}
 
@@ -1239,13 +1255,14 @@ class Cari extends CI_Controller
 		$fotograf_dosyalar = [];
 		if (!empty($_FILES['cari_fotograflar']['name'][0])) {
 			$count = count($_FILES['cari_fotograflar']['name']);
+			$gorsel_dir = FCPATH . 'assets/uploads/cariler/gorseller/';
+			if (!is_dir($gorsel_dir)) { mkdir($gorsel_dir, 0777, true); }
 			for ($i = 0; $i < $count; $i++) {
 				$tmp_name = $_FILES['cari_fotograflar']['tmp_name'][$i];
 				$name = uniqid('foto_') . '_' . basename($_FILES['cari_fotograflar']['name'][$i]);
-				$upload_dir = FCPATH . 'assets/uploads/';
-				if (!is_dir($upload_dir)) { mkdir($upload_dir, 0777, true); }
-				if (move_uploaded_file($tmp_name, $upload_dir . $name)) {
-					$fotograf_dosyalar[] = $name;
+				$target_path = $gorsel_dir . $name;
+				if (move_uploaded_file($tmp_name, $target_path)) {
+					$fotograf_dosyalar[] = 'cariler/gorseller/' . $name;
 				}
 			}
 		}
@@ -1256,13 +1273,14 @@ class Cari extends CI_Controller
 		$evrak_dosyalar = [];
 		if (!empty($_FILES['cari_dosya']['name'][0])) {
 			$count = count($_FILES['cari_dosya']['name']);
+			$evrak_dir = FCPATH . 'assets/uploads/cariler/evraklar/';
+			if (!is_dir($evrak_dir)) { mkdir($evrak_dir, 0777, true); }
 			for ($i = 0; $i < $count; $i++) {
 				$tmp_name = $_FILES['cari_dosya']['tmp_name'][$i];
 				$name = uniqid('evrak_') . '_' . basename($_FILES['cari_dosya']['name'][$i]);
-				$upload_dir = FCPATH . 'assets/uploads/';
-				if (!is_dir($upload_dir)) { mkdir($upload_dir, 0777, true); }
-				if (move_uploaded_file($tmp_name, $upload_dir . $name)) {
-					$evrak_dosyalar[] = $name;
+				$target_path = $evrak_dir . $name;
+				if (move_uploaded_file($tmp_name, $target_path)) {
+					$evrak_dosyalar[] = 'cariler/evraklar/' . $name;
 				}
 			}
 		}
@@ -1282,6 +1300,7 @@ class Cari extends CI_Controller
             $returnData = array();
             if (strlen($term) >= 4) {
                 $sql = "SELECT cari_id, cari_ad, cari_soyad, cari_vergiNumarasi, cari_tckn FROM cari WHERE cari_olusturanAnaHesap = ? AND (
+
                     cari_ad LIKE ? OR
                     cari_soyad LIKE ? OR
                     cari_vergiNumarasi LIKE ? OR
@@ -1340,10 +1359,66 @@ class Cari extends CI_Controller
                 'tutar' => $kalann,
                 'tip' => $kalan > 0 ? 'borc' : 'alacak'
             ]);
-            
-        } catch (Exception $e) {
+              } catch (Exception $e) {
             echo json_encode(['success' => false, 'message' => $e->getMessage()]);
         }
         die;
+    }
+
+    /**
+     * Unified Cari Form - hem yeni oluşturma hem düzenleme için tek sayfa
+     * @param int|null $id - Edit mode için cari ID
+     */
+    public function cariForm($id = null)
+    {
+        $isEditMode = !empty($id);
+        
+        if ($isEditMode) {
+            // Edit mode - mevcut cari verisini çek
+            $data["baslik"] = "Cari / Cari Kartı Düzenle";
+            
+            $anaHesap = anaHesapBilgisi();
+            $cariQ = "SELECT c.*, i.il as il_adi, il.ilce as ilce_adi 
+                      FROM cari c 
+                      LEFT JOIN iller i ON c.cari_il = i.id 
+                      LEFT JOIN ilceler il ON c.cari_ilce = il.id 
+                      WHERE c.cari_id = '$id' AND c.cari_durum = true";
+            $cari = $this->db->query($cariQ)->row();
+            
+            if (!$cari) {
+                show_error('Cari kaydı bulunamadı!');
+                return;
+            }
+            
+            $olusturanHesapKim = $cari->cari_olusturanAnaHesap;
+            if ($anaHesap != $olusturanHesapKim) {
+                redirect('hata');
+                return;
+            }
+            
+            $data["cari"] = $cari;
+            
+            // Detaylı iletişim ve banka bilgilerini de çek
+            $cariDetayliQ = "SELECT * FROM cariDetayliIletisim WHERE cdetay_cariID = '$id'";
+            $data["detaylıIletisim"] = $this->db->query($cariDetayliQ)->result();
+
+            $cariDetayliBankaQ = "SELECT * FROM cariDetayliBanka WHERE cdetayBanka_cariID = '$id'";
+            $data["detayliBanka"] = $this->db->query($cariDetayliBankaQ)->result();
+            
+        } else {
+            // Create mode
+            $data["baslik"] = "Cari / Cari Kartı Oluştur";
+        }
+        
+        // İller listesini her iki mod için de çek
+        $iller = $this->db->get('iller');
+        if ($iller->num_rows() > 0) {
+            $data['_iller'] = $iller->result();
+        } else {
+            $data['_iller'] = false;
+        }
+        
+        // Unified view'ı yükle
+        $this->load->view("cari/cari-karti-olustur", $data);
     }
 }

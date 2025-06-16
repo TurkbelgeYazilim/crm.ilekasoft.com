@@ -23,9 +23,8 @@ class Check extends CI_Controller {
 		$password = postval('u_password');
 
 		$query1 = $this->vt->single("kullanicilar",array('kullanici_eposta'=>$email,'kullanici_sifre'=>md5($password)));
-
 		if($query1){
-			$kullaniciAnaHesapID = $query1->kullanici_anaHesapID;
+			$kullaniciSorumluMudur = $query1->kullanici_sorumluMudur;
 
 			$status = $query1->kullanici_durum;
 			$kullanici_demo = $query1->kullanici_demo;

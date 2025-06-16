@@ -202,6 +202,21 @@ input[type=number] {
     color: #fff !important;
 }
 .text-danger {
-    color: #5c2d91 !important;
+    color: #fff !important;
+    background: #5c2d91 !important;
+    padding: 2px 6px;
+    border-radius: 3px;
+}
+
+/* Beyaz buton + kırmızı yazı kombinasyonu için mor arka plan ve beyaz yazı */
+.btn-white.text-danger, .btn.btn-white.text-danger {
+    background: #5c2d91 !important;
+    border-color: #5c2d91 !important;
+    color: #fff !important;
+}
+.btn-white.text-danger:hover, .btn.btn-white.text-danger:hover {
+    background: #7c4dff !important;
+    border-color: #7c4dff !important;
+    color: #fff !important;
 }
 </style>

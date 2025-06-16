@@ -174,10 +174,9 @@ $modulSorgula = modulSorgula($firma_ID, 1);
 										 id="faturaBilgisiDiv" <?php if (!$faturaDetay) echo "style='display:none;'"; ?>>
 										<div class="col-12">
 											<div class="row">
-												<div class="col-md-7">
-													<div class="col-md-12">
+												<div class="col-md-7">													<div class="col-md-12">
 														<div class="form-group row">
-															<label class="col-sm-3 text-sm-left pt-2">Fatura No</label>
+															<label class="col-sm-3 text-sm-left pt-2">Sözleşme No <span style="color: red;">*</span></label>
 															<div class="col-sm-9">
 																<input type="text" class="form-control"
 																	   name="proforma_faturaNo"
@@ -186,8 +185,7 @@ $modulSorgula = modulSorgula($firma_ID, 1);
 															</div>
 
 														</div>
-													</div>
-													<div class="col-md-12">
+													</div><div class="col-md-12" style="display: none;">
 														<div class="form-group row">
 															<label class="col-sm-3 text-sm-left pt-2">Tip</label>
 															<div class="col-sm-9" id="proforma_faturaTip_div">
@@ -291,9 +289,7 @@ $modulSorgula = modulSorgula($firma_ID, 1);
 																	   id="datetimepicker"/>
 															</div>
 														</div>
-													</div>
-
-													<div class="col-md-12">
+													</div>													<div class="col-md-12" style="display: none;">
 														<div class="form-group row">
 															<label class="col-sm-3 text-sm-left pt-2">Etiket</label>
 															<div class="col-sm-9">
@@ -317,11 +313,9 @@ $modulSorgula = modulSorgula($firma_ID, 1);
 										 id="checkboxDiv"<?php if (!$faturaDetay) echo "style='display:none;'"; ?>>
 										<div class="row pl-4">
 
-											<div class="col-md-4">
-
-												<input class="form-check-input" type="checkbox" value="1"
+											<div class="col-md-4">												<input class="form-check-input" type="checkbox" value="1"
 													   id="kdvCheck" onchange="kdvCheckFunc()"
-													   name="kdvCheck" style="width:30px;height:20px;">
+													   name="kdvCheck" style="width:30px;height:20px;" checked>
 												<label class="form-check-label ml-3" for="kdvCheck">
 													KDV Dahil
 												</label>
@@ -809,8 +803,7 @@ $modulSorgula = modulSorgula($firma_ID, 1);
 									<div class="row"
 										 id="faturaAltBilgisiDiv" <?php if (!$faturaDetay) echo "style='display:none;'"; ?>>
 										<div class="col-md-12">
-											<h4 class="card-title mt-4">Fatura Alt Bilgileri</h4>
-											<div class="row">
+											<h4 class="card-title mt-4">Fatura Alt Bilgileri</h4>											<div class="row">
 												<div class="col-md-12">
 													<div class="form-group">
 														<label>Açıklama</label>
@@ -819,6 +812,16 @@ $modulSorgula = modulSorgula($firma_ID, 1);
 													</div>
 												</div>
 											</div>
+											<!-- Dosya Yükleme Alanı -->
+											<div class="row">
+												<div class="col-md-12">
+													<div class="form-group">
+														<label>Satış sözleşmesini lütfen buraya yükleyiniz <span style="color: red;">*</span></label>
+														<input type="file" class="form-control" name="fatura_dosya[]" multiple accept="*/*" required>
+													</div>
+												</div>
+											</div>
+											<!-- /Dosya Yükleme Alanı -->
 
 											<div class="col-md-12 p-0">
 												<div class="row">

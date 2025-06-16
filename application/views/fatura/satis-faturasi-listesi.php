@@ -30,13 +30,13 @@ $modulSorgula = modulSorgula($firma_ID, 1);
 			<div class="page-header">
 				<div class="row">
 					<div class="col-sm-10">
-						<h3 class="page-title">Fatura</h3>
+						<h3 class="page-title">Satış Sözleşme Listesi</h3>
 						<ul class="breadcrumb">
 							<li class="breadcrumb-item"><a href="<?= base_url(); ?>">Anasayfa</a>
 							</li>
-							<li class="breadcrumb-item">Fatura
+							<li class="breadcrumb-item">Sözleşme
 							</li>
-							<li class="breadcrumb-item active">Satış Faturası Listesi</li>
+							<li class="breadcrumb-item active">Satış Sözleşme Listesi</li>
 						</ul>
 					</div>
 					<div class="d-flex justify-content-end text-align-center col-sm-2">

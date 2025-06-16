@@ -24,8 +24,6 @@ class Yonetici extends CI_Controller {
 
 	public function kullaniciLoglari(){
 
-		if(gibYetki()==1)
-			redirect("home/hata");
 		$data["baslik"] = "Yönetici / Kullanıcı Logları";
 		$anaHesap = anaHesapBilgisi();
 
@@ -116,27 +114,55 @@ class Yonetici extends CI_Controller {
 		$data["loglar"] = $this->db->query($sorgu)->result();
 
 		$this->load->view("yonetici/kullanici-loglari",$data);
-	}
-
-	public function yeniKullaniciEkle(){
+	}	public function yeniKullaniciEkle(){
 
 		if(gibYetki()==1)
 			redirect("home/hata");
 
 		if(isDemoActive() == 1)
-			redirect("home/hata");
-
-		$data["baslik"] = "Yönetici / Yeni Kullanıcı Ekle";
-		//logekle(48,1);
-		$this->load->view("yonetici/yeni-kullanici-ekle", $data);
+			redirect("home/hata");		$data["baslik"] = "Yönetici / Yeni Kullanıcı Ekle";
+		$anaHesap = anaHesapBilgisi();
+		
+		// Kullanıcı gruplarını getir
+		$kullaniciGruplariQ = "SELECT * FROM kullanici_grubu WHERE kg_olusturanAnaHesap = '$anaHesap' ORDER BY kg_adi ASC";
+		$data["kullaniciGruplari"] = $this->db->query($kullaniciGruplariQ)->result();
+		
+		// Sorumlu müdür seçimi için tüm kullanıcıları getir
+		$tumKullanicilarQ = "SELECT kullanici_id, kullanici_ad, kullanici_soyad FROM kullanicilar WHERE kullanici_sorumluMudur = '$anaHesap' AND kullanici_durum = 1 ORDER BY kullanici_ad ASC, kullanici_soyad ASC";
+		$data["tumKullanicilar"] = $this->db->query($tumKullanicilarQ)->result();
+		
+		// İlleri getir		
+		$illerQ = "SELECT * FROM iller ORDER BY il ASC";
+		$data["iller"] = $this->db->query($illerQ)->result();
+		
+		// Ülkeleri getir - Eğer tablo yoksa boş array ata
+		$data["ulkeler"] = [];
+		
+		// Tablo varlığını kontrol et
+		if ($this->db->table_exists('ulkeler')) {
+			try {
+				$ulkelerQ = "SELECT ulke_kodu as country_code, ulke_adi as country_name FROM ulkeler ORDER BY ulke_adi ASC";
+				$data["ulkeler"] = $this->db->query($ulkelerQ)->result();
+			} catch (Exception $e) {
+				// Hata durumunda boş array bırak
+				$data["ulkeler"] = [];
+			}
+		}
+				//logekle(48,1);
+		$this->load->view("yonetici/kullanici", $data);
 	}
-
 	public function kullaniciOlustur(){
 
 		if(gibYetki()==1)
 			redirect("home/hata");
 		$control2 = session("r", "login_info");
 		$u_id = $control2->kullanici_id;
+
+		// Debug log setup
+		$debug_log_file = 'debug_kullanici_olustur.log';
+		$timestamp = date('Y-m-d H:i:s');
+		$log_entry = $timestamp . " [START] Kullanıcı oluşturma işlemi başladı\n";
+		file_put_contents($debug_log_file, $log_entry, FILE_APPEND | LOCK_EX);
 
 		date_default_timezone_set('Europe/Istanbul');
 		$tarihi = (new DateTime('now'))->format('Y.m.d H:i:s');
@@ -147,42 +173,110 @@ class Yonetici extends CI_Controller {
 		$sifreTekrar = postval("kullanici_sifreTekrar");
 
 		$eposta = postval("kullanici_eposta");
-
-		if($sifre == $sifreTekrar){
-			$data["kullanici_eposta"] = $eposta;
-			$data["kullanici_ad"] = postval("kullanici_ad");
+		
+		$log_entry = $timestamp . " [INFO] Form verileri alındı - Email: $eposta\n";
+		file_put_contents($debug_log_file, $log_entry, FILE_APPEND | LOCK_EX);
+		
+		if($sifre == $sifreTekrar){			$data["kullanici_eposta"] = $eposta;			$data["kullanici_ad"] = postval("kullanici_ad");
 			$data["kullanici_soyad"] = postval("kullanici_soyad");
 			$data["kullanici_kullaniciAdi"] = postval("kullanici_kullaniciAdi");
 			$data["kullanici_sifre"] = md5($sifre);
-			$data["kullanici_yetki"] = postval("kullanici_yetki");
+			$data["grup_id"] = postval("kullanici_grupID"); // Form field adı kullanici_grupID ama database field grup_id
 			$data["kullanici_durum"] = postval("kullanici_durum");
-			$data["kullanici_anaHesapID"] = $anaHesap;
+			
+			// Sorumlu müdür alanı - eğer seçilmişse kullan, yoksa mevcut ana hesabı kullan			$sorumluMudur = postval("kullanici_sorumluMudur");
+			$data["kullanici_sorumluMudur"] = !empty($sorumluMudur) ? $sorumluMudur : $anaHesap;
+			
 			$data["kullanici_olusturmaTarihi"] = $tarihi;
 			$data["kullanici_olusturan"] = $u_id;
 
 			$kullaniciEpostaVarmiQ = "SELECT * FROM kullanicilar WHERE kullanici_eposta = '$eposta'";
-			$kullaniciEpostaVarmi = $this->db->query($kullaniciEpostaVarmiQ)->row();
-
-			if($kullaniciEpostaVarmi){
+			$kullaniciEpostaVarmi = $this->db->query($kullaniciEpostaVarmiQ)->row();			if($kullaniciEpostaVarmi){
 				$this->session->set_flashdata('kullanici_eposta_mevcut','OK');
-				redirect("yonetici/yeni-kullanici-ekle");			}else{
+				redirect("yonetici/yeni-kullanici-ekle");
+			}else{
 				$this->vt->insert("kullanicilar",$data);
 				$kullanici_idsi = $this->db->insert_id();
 				
+				// Debug log file setup
+				$debug_log_file = 'debug_sorumluluk_bolgesi_olustur.log';
+				$timestamp = date('Y-m-d H:i:s');
+				
+				// Sorumluluk bölgelerini güncelle - sadece checkbox işaretliyse
+				$sorumluluk_aktif = postval("sorumluluk_aktif"); // Checkbox durumu
+				$log_entry = $timestamp . " [CREATE] Sorumluluk aktif checkbox durumu: " . ($sorumluluk_aktif ? 'CHECKED' : 'NOT_CHECKED') . "\n";
+				file_put_contents($debug_log_file, $log_entry, FILE_APPEND | LOCK_EX);
+				
+				if ($sorumluluk_aktif) {
+					// Sorumluluk bölgelerini kaydet
+					$sorumlulukBolgeleri = postval("sorumluluk_bolgesi");
+					
+					// Yeni sorumluluk bölgesi alanlarını al
+					$sorumluluk_baslangic_tarihi = postval("sorumluluk_baslangic_tarihi");
+					$sorumluluk_bitis_tarihi = postval("sorumluluk_bitis_tarihi");
+					$sorumluluk_ulke_id = postval("sorumluluk_ulke_id");
+					$sorumluluk_aciklama = postval("sorumluluk_aciklama");
+					
+					if(!empty($sorumlulukBolgeleri) && is_array($sorumlulukBolgeleri)){
+					foreach($sorumlulukBolgeleri as $bolge){
+						$bolgeParts = explode('_', $bolge);
+						if(count($bolgeParts) == 2){
+							$il_id = $bolgeParts[0];
+							$ilce_id = $bolgeParts[1];
+									// Tablo yapısını kontrol et
+							$tableColumns = $this->db->list_fields('kullanici_sorumluluk_bolgesi');
+							$hasExtendedColumns = in_array('baslangic_tarihi', $tableColumns) && 
+												  in_array('bitis_tarihi', $tableColumns) && 
+												  in_array('ulke_id', $tableColumns) && 
+												  in_array('aciklama', $tableColumns);
+							
+							// Temel veriler
+							$sorumlulukData = array(
+								"kullanici" => $kullanici_idsi,
+								"il_id" => $il_id,
+								"ilce_id" => $ilce_id,
+								"durum" => 1
+							);
+							
+							// Eğer genişletilmiş alanlar varsa ekle
+							if ($hasExtendedColumns) {
+								$sorumlulukData["baslangic_tarihi"] = !empty($sorumluluk_baslangic_tarihi) ? $sorumluluk_baslangic_tarihi : null;
+								$sorumlulukData["bitis_tarihi"] = !empty($sorumluluk_bitis_tarihi) ? $sorumluluk_bitis_tarihi : null;
+								$sorumlulukData["ulke_id"] = !empty($sorumluluk_ulke_id) ? $sorumluluk_ulke_id : 'TR';
+								$sorumlulukData["aciklama"] = $sorumluluk_aciklama;
+								
+								// Eğer islemi_yapan ve islem_tarihi alanları da varsa ekle
+								if (in_array('islemi_yapan', $tableColumns)) {
+									$sorumlulukData["islemi_yapan"] = $u_id;
+								}
+								if (in_array('islem_tarihi', $tableColumns)) {
+									$sorumlulukData["islem_tarihi"] = date('Y-m-d H:i:s');
+								}
+							}							$this->vt->insert("kullanici_sorumluluk_bolgesi", $sorumlulukData);
+							$log_entry = $timestamp . " [CREATE] Sorumluluk bölgesi eklendi: $il_id-$ilce_id\n";
+							file_put_contents($debug_log_file, $log_entry, FILE_APPEND | LOCK_EX);
+						}
+					}
+				}
+				} else {
+					// Checkbox işaretli değilse sorumluluk bölgesi işlemlerini atla
+					$log_entry = $timestamp . " [CREATE] Sorumluluk bölgesi checkbox işaretli değil, bu işlemler atlanıyor\n";
+					file_put_contents($debug_log_file, $log_entry, FILE_APPEND | LOCK_EX);
+				} // Sorumluluk aktif checkbox kontrolü sonu
+				
 				// Kullanıcı başarıyla oluşturulduktan sonra otomatik varsayılan kasa oluştur
 				$this->otomatikKasaOlustur($kullanici_idsi, $u_id, $anaHesap, $tarihi);
-				
-				$this->session->set_flashdata('kullanici_ok','OK');
+						$this->session->set_flashdata('kullanici_ok','OK');
 				logekle(48,2);
 				redirect("yonetici/mevcut-kullanici-duzenle/$kullanici_idsi");
 			}
 		}else{
+			$log_entry = $timestamp . " [ERROR] Şifreler uyuşmuyor\n";
+			file_put_contents($debug_log_file, $log_entry, FILE_APPEND | LOCK_EX);
 			$this->session->set_flashdata('kullanici_sifreHata','OK');
 			redirect("yonetici/yeni-kullanici-ekle");
 		}
-	}
-
-	public function mevcutKullaniciDuzenle($id){
+	}	public function mevcutKullaniciDuzenle($id){
 
 		if(gibYetki()==1)
 			redirect("home/hata");
@@ -192,14 +286,52 @@ class Yonetici extends CI_Controller {
 		$kullaniciQ = "SELECT * FROM kullanicilar WHERE kullanici_id = '$id'";
 		$data["kullanici"] = $this->db->query($kullaniciQ)->row();
 
-		$olusturanHesapKim = $data["kullanici"]->kullanici_anaHesapID;
-
-		if($anaHesap == $olusturanHesapKim){
-			//logekle(48,1);
-			$this->load->view("yonetici/mevcut-kullanici-duzenle", $data);
-		}else{
-			redirect('hata');
-		}
+		// Kullanıcı gruplarını getir (ana hesap filtresi kaldırıldı)
+		$kullaniciGruplariQ = "SELECT * FROM kullanici_grubu ORDER BY kg_adi ASC";
+		$data["kullaniciGruplari"] = $this->db->query($kullaniciGruplariQ)->result();
+		
+		// Sorumlu müdür seçimi için tüm kullanıcıları getir (ana hesap filtresi kaldırıldı)
+		$tumKullanicilarQ = "SELECT kullanici_id, kullanici_ad, kullanici_soyad FROM kullanicilar WHERE kullanici_durum = 1 ORDER BY kullanici_ad ASC, kullanici_soyad ASC";
+		$data["tumKullanicilar"] = $this->db->query($tumKullanicilarQ)->result();
+		
+		// İlleri getir
+		$illerQ = "SELECT * FROM iller ORDER BY il ASC";		$data["iller"] = $this->db->query($illerQ)->result();
+				// Ülkeleri getir (updated to use correct field name from database schema)
+		$ulkelerQ = "SELECT ulke_kodu as country_code, ulke_adi as country_name FROM ulkeler ORDER BY ulke_adi ASC";
+		$data["ulkeler"] = $this->db->query($ulkelerQ)->result();
+		
+		// Kullanıcının mevcut sorumluluk bölgelerini getir
+		$kullaniciSorumlulukQ = "SELECT sb.*, i.il, ilc.ilce, 
+								 CONCAT(k.kullanici_ad, ' ', LEFT(k.kullanici_soyad, 1), '.') as islemi_yapan_adi
+								 FROM kullanici_sorumluluk_bolgesi sb
+								 LEFT JOIN iller i ON sb.il_id = i.id
+								 LEFT JOIN ilceler ilc ON sb.ilce_id = ilc.id
+								 LEFT JOIN kullanicilar k ON sb.islemi_yapan = k.kullanici_id
+								 WHERE sb.kullanici = '$id' AND sb.durum = 1";
+		$data["kullaniciSorumlulukBolgeleri"] = $this->db->query($kullaniciSorumlulukQ)->result();// Kullanıcının sorumluluk bölgesi temel bilgilerini getir (ilk kayıt varsa)
+		// Önce tablo yapısını kontrol et
+		$tableColumns = $this->db->list_fields('kullanici_sorumluluk_bolgesi');
+		$hasExtendedColumns = in_array('baslangic_tarihi', $tableColumns) && 
+							  in_array('bitis_tarihi', $tableColumns) && 
+							  in_array('ulke_id', $tableColumns) && 
+							  in_array('aciklama', $tableColumns);
+		
+		if ($hasExtendedColumns) {
+			$kullaniciSorumlulukBilgiQ = "SELECT baslangic_tarihi, bitis_tarihi, ulke_id, aciklama
+										   FROM kullanici_sorumluluk_bolgesi 
+										   WHERE kullanici = '$id' AND durum = 1 
+										   LIMIT 1";
+		} else {
+			// Eski tablo yapısı için temel sorgu
+			$kullaniciSorumlulukBilgiQ = "SELECT kullanici, durum
+										   FROM kullanici_sorumluluk_bolgesi 
+										   WHERE kullanici = '$id' AND durum = 1 
+										   LIMIT 1";
+		}		$data["kullaniciSorumlulukBilgi"] = $this->db->query($kullaniciSorumlulukBilgiQ)->row();
+		$data["hasExtendedColumns"] = $hasExtendedColumns;
+		
+		//logekle(48,1);
+		$this->load->view("yonetici/kullanici", $data);
 	}
 
 	public function kullaniciDuzenle(){
@@ -222,24 +354,129 @@ class Yonetici extends CI_Controller {
 				redirect("yonetici/mevcut-kullanici-duzenle/$kullanici_id");
 			}
 		}
-
-		$data["kullanici_eposta"] = $eposta;
-		$data["kullanici_ad"] = postval("kullanici_ad");
-		$data["kullanici_soyad"] = postval("kullanici_soyad");
+		$data["kullanici_eposta"] = $eposta;		$data["kullanici_ad"] = postval("kullanici_ad");		$data["kullanici_soyad"] = postval("kullanici_soyad");
 		$data["kullanici_kullaniciAdi"] = postval("kullanici_kullaniciAdi");
-		$data["kullanici_yetki"] = postval("kullanici_yetki");
+		$data["grup_id"] = postval("kullanici_grupID"); // Form field adı kullanici_grupID ama database field grup_id
 		$data["kullanici_durum"] = postval("kullanici_durum");
+		$data["kullanici_sorumluMudur"] = postval("kullanici_sorumluMudur"); // Sorumlu müdür alanı
 
 		$kullaniciEpostaVarmiQ = "SELECT * FROM kullanicilar WHERE kullanici_eposta = '$eposta' AND kullanici_id != '$kullanici_id'";
 		$kullaniciEpostaVarmi = $this->db->query($kullaniciEpostaVarmiQ)->row();
-
 		if($kullaniciEpostaVarmi){
 			$this->session->set_flashdata('kullanici_eposta_mevcut','OK');
 			redirect("yonetici/mevcut-kullanici-duzenle/$kullanici_id");
 		}else{
 			$this->vt->update('kullanicilar', array('kullanici_id'=>$kullanici_id), $data);
-			$this->session->set_flashdata('kullanici_update_ok','OK');
-			logekle(48,3);
+					// Sorumluluk bölgelerini güncelle - sadece checkbox işaretliyse
+		$sorumluluk_aktif = postval("sorumluluk_aktif"); // Checkbox durumu
+		$sorumlulukBolgeleri = postval("sorumluluk_bolgesi");
+		
+		// GÜÇLENDIRILMIŞ DEBUG LOGGING
+		$debug_log_file = FCPATH . 'debug_form_submission.log';
+		$timestamp = date('Y-m-d H:i:s');
+		
+		// Detaylı debug bilgileri
+		$debug_info = array(
+			'timestamp' => $timestamp,
+			'kullanici_id' => $kullanici_id,
+			'sorumluluk_aktif' => $sorumluluk_aktif,
+			'post_count' => count($_POST),
+			'post_keys' => array_keys($_POST),
+			'sorumluluk_bolgesi_raw' => isset($_POST['sorumluluk_bolgesi']) ? $_POST['sorumluluk_bolgesi'] : 'NOT_SET',
+			'sorumluluk_bolgesi_parsed' => $sorumlulukBolgeleri,
+			'is_array' => is_array($sorumlulukBolgeleri),
+			'array_count' => is_array($sorumlulukBolgeleri) ? count($sorumlulukBolgeleri) : 0
+		);
+		
+		// Log dosyasına yaz
+		$log_entry = $timestamp . " [INFO] Form submission debug: " . json_encode($debug_info) . "\n";
+		file_put_contents($debug_log_file, $log_entry, FILE_APPEND | LOCK_EX);
+		
+		// Eski error_log'ları da tut
+		error_log("DEBUG - POST Verileri: " . print_r($_POST, true));
+		error_log("DEBUG - Sorumluluk Bölgeleri: " . print_r($sorumlulukBolgeleri, true));
+		error_log("DEBUG - Sorumluluk Aktif: " . ($sorumluluk_aktif ? 'TRUE' : 'FALSE'));
+		
+		// Sorumluluk bölgesi işlemleri sadece checkbox işaretliyse yapılsın
+		if ($sorumluluk_aktif) {
+			// Önce mevcut sorumluluk bölgelerini pasif yap
+			$this->db->query("UPDATE kullanici_sorumluluk_bolgesi SET durum = 0 WHERE kullanici = '$kullanici_id'");
+			
+			// Yeni sorumluluk bölgesi alanlarını al
+			$sorumluluk_baslangic_tarihi = postval("sorumluluk_baslangic_tarihi");
+			$sorumluluk_bitis_tarihi = postval("sorumluluk_bitis_tarihi");
+			$sorumluluk_ulke_id = postval("sorumluluk_ulke_id") ?: 1; // Varsayılan: Türkiye
+			$sorumluluk_aciklama = postval("sorumluluk_aciklama");
+			
+			// Yeni sorumluluk bölgelerini ekle/aktif et
+			if(!empty($sorumlulukBolgeleri) && is_array($sorumlulukBolgeleri)){
+				$log_entry = $timestamp . " [SUCCESS] Sorumluluk bölgeleri işleme başlıyor. Toplam: " . count($sorumlulukBolgeleri) . "\n";
+				file_put_contents($debug_log_file, $log_entry, FILE_APPEND | LOCK_EX);
+				
+				foreach($sorumlulukBolgeleri as $index => $bolge){
+					$bolgeParts = explode('_', $bolge);
+					$log_entry = $timestamp . " [INFO] İşlenen bölge #$index: '$bolge' -> Parts: " . json_encode($bolgeParts) . "\n";
+					file_put_contents($debug_log_file, $log_entry, FILE_APPEND | LOCK_EX);
+					
+					if(count($bolgeParts) == 2){
+					$il_id = $bolgeParts[0];
+					$ilce_id = $bolgeParts[1];
+					
+					// Önce var mı kontrol et
+					$mevcutSorumlulukQ = "SELECT * FROM kullanici_sorumluluk_bolgesi WHERE kullanici = '$kullanici_id' AND il_id = '$il_id' AND ilce_id = '$ilce_id'";
+					$mevcutSorumluluk = $this->db->query($mevcutSorumlulukQ)->row();
+					
+					if($mevcutSorumluluk){
+						// Var ise aktif et ve yeni alanları güncelle
+						$updateData = array(
+							"durum" => 1,
+							"baslangic_tarihi" => $sorumluluk_baslangic_tarihi ?: null,
+							"bitis_tarihi" => $sorumluluk_bitis_tarihi ?: null,
+							"ulke_id" => $sorumluluk_ulke_id,
+							"aciklama" => $sorumluluk_aciklama ?: null,
+							"islem_tarihi" => date('Y-m-d H:i:s')
+						);
+						$this->db->where('kullanici', $kullanici_id);
+						$this->db->where('il_id', $il_id);
+						$this->db->where('ilce_id', $ilce_id);
+						$update_result = $this->db->update('kullanici_sorumluluk_bolgesi', $updateData);
+						$log_entry = $timestamp . " [SUCCESS] Mevcut kayıt güncellendi: $il_id-$ilce_id (Result: " . ($update_result ? 'OK' : 'FAIL') . ")\n";
+						file_put_contents($debug_log_file, $log_entry, FILE_APPEND | LOCK_EX);
+					}else{
+						// Yok ise yeni ekle
+						$sorumlulukData = array(
+							"kullanici" => $kullanici_id,
+							"il_id" => $il_id,
+							"ilce_id" => $ilce_id,
+							"baslangic_tarihi" => $sorumluluk_baslangic_tarihi ?: null,
+							"bitis_tarihi" => $sorumluluk_bitis_tarihi ?: null,
+							"ulke_id" => $sorumluluk_ulke_id,
+							"aciklama" => $sorumluluk_aciklama ?: null,
+							"durum" => 1,
+							"islemi_yapan" => $kullanici_id, // Current user updating
+							"islem_tarihi" => date('Y-m-d H:i:s')
+						);
+						$insert_result = $this->vt->insert("kullanici_sorumluluk_bolgesi", $sorumlulukData);
+						$log_entry = $timestamp . " [SUCCESS] Yeni kayıt eklendi: $il_id-$ilce_id (Insert Result: " . ($insert_result ? 'OK' : 'FAIL') . ")\n";
+						file_put_contents($debug_log_file, $log_entry, FILE_APPEND | LOCK_EX);
+					}
+				} else {
+					$log_entry = $timestamp . " [ERROR] Geçersiz bölge formatı: '$bolge'\n";
+					file_put_contents($debug_log_file, $log_entry, FILE_APPEND | LOCK_EX);
+				}
+			}		} else {
+			$empty_reason = empty($sorumlulukBolgeleri) ? 'EMPTY' : 'NOT_ARRAY';
+			$log_entry = $timestamp . " [WARNING] Sorumluluk bölgeleri işlenemedi. Sebep: $empty_reason\n";
+			file_put_contents($debug_log_file, $log_entry, FILE_APPEND | LOCK_EX);
+		}
+		} else {
+			// Checkbox işaretli değilse sorumluluk bölgesi işlemlerini atla
+			$log_entry = $timestamp . " [INFO] Sorumluluk bölgesi checkbox işaretli değil, bu işlemler atlanıyor\n";
+			file_put_contents($debug_log_file, $log_entry, FILE_APPEND | LOCK_EX);
+		}
+			
+		$this->session->set_flashdata('kullanici_update_ok','OK');
+		logekle(48,3);
 			redirect("yonetici/mevcut-kullanici-duzenle/$kullanici_id");
 		}
 	}
@@ -263,19 +500,14 @@ class Yonetici extends CI_Controller {
 		$limit = 20;
 
 		if($sayfa){$pagem = ($page-1)*$limit;}
-		else{$pagem = 0;/*logekle(50,1);*/}
-
-		if((isset($kullaniciEposta) && !empty($kullaniciEposta)) || (isset($kullaniciAdi) && !empty($kullaniciAdi))){
-			$countq = "SELECT COUNT(*) as total FROM kullanicilar WHERE kullanici_anaHesapID = '$anaHesap' AND kullanici_eposta LIKE '%$kullaniciEposta%' AND kullanici_kullaniciAdi LIKE '%$kullaniciAdi%'";
+		else{$pagem = 0;/*logekle(50,1);*/}		if((isset($kullaniciEposta) && !empty($kullaniciEposta)) || (isset($kullaniciAdi) && !empty($kullaniciAdi))){
+			$countq = "SELECT COUNT(*) as total FROM kullanicilar WHERE kullanici_eposta LIKE '%$kullaniciEposta%' AND kullanici_kullaniciAdi LIKE '%$kullaniciAdi%'";
+			$countexe = $this->db->query($countq)->row();
+			$count = $countexe->total;			$sorgu = "SELECT k.*, kg.kg_adi, sm.kullanici_ad as sorumlu_mudur_ad, sm.kullanici_soyad as sorumlu_mudur_soyad FROM kullanicilar k LEFT JOIN kullanici_grubu kg ON k.grup_id = kg.kg_id LEFT JOIN kullanicilar sm ON k.kullanici_sorumluMudur = sm.kullanici_id WHERE k.kullanici_eposta LIKE '%$kullaniciEposta%' AND k.kullanici_kullaniciAdi LIKE '%$kullaniciAdi%' ORDER BY k.kullanici_id DESC LIMIT $pagem,$limit";		}else{
+			$countq = "SELECT COUNT(*) as total FROM kullanicilar";
 			$countexe = $this->db->query($countq)->row();
 			$count = $countexe->total;
-
-			$sorgu = "SELECT * FROM kullanicilar WHERE kullanici_anaHesapID = '$anaHesap' AND kullanici_eposta LIKE '%$kullaniciEposta%' AND kullanici_kullaniciAdi LIKE '%$kullaniciAdi%' ORDER BY kullanici_id DESC LIMIT $pagem,$limit";
-		}else{
-			$countq = "SELECT COUNT(*) as total FROM kullanicilar WHERE kullanici_anaHesapID = '$anaHesap'";
-			$countexe = $this->db->query($countq)->row();
-			$count = $countexe->total;
-			$sorgu = "SELECT * FROM kullanicilar WHERE kullanici_anaHesapID = '$anaHesap' ORDER BY kullanici_id DESC LIMIT $pagem,$limit";
+			$sorgu = "SELECT k.*, kg.kg_adi, sm.kullanici_ad as sorumlu_mudur_ad, sm.kullanici_soyad as sorumlu_mudur_soyad FROM kullanicilar k LEFT JOIN kullanici_grubu kg ON k.grup_id = kg.kg_id LEFT JOIN kullanicilar sm ON k.kullanici_sorumluMudur = sm.kullanici_id ORDER BY k.kullanici_id DESC LIMIT $pagem,$limit";
 		}
 
 		$data["count_of_list"] = $count;
@@ -411,24 +643,14 @@ class Yonetici extends CI_Controller {
 		redirect("yonetici/ayarlar");
 
 	}
-
 	public function kullaniciYetkileriDuzenle(){
 		$data["baslik"] = "Yönetici / Kullanıcı Yetkileri Düzenle";
 		$anaHesap = anaHesapBilgisi();
 
 		$kullanici = $this->input->get("kullanici");
 
-		$kullaniciQ = "SELECT * FROM kullanicilar WHERE kullanici_id = '$kullanici'";
-		$kullaniciExe = $this->db->query($kullaniciQ)->row();
-
-		$olusturanHesapKim = $kullaniciExe->kullanici_anaHesapID;
-
 		if($kullanici){
-			if($anaHesap == $olusturanHesapKim){
-				$this->load->view("yonetici/kullanici-yetkileri-duzenle",$data);
-			}else{
-				redirect('hata');
-			}
+			$this->load->view("yonetici/kullanici-yetkileri-duzenle",$data);
 		}else{
 			$this->load->view("yonetici/kullanici-yetkileri-duzenle",$data);
 		}
@@ -648,7 +870,7 @@ class Yonetici extends CI_Controller {
 		}else if(empty($post["rapor"])){
 			$this->db->delete('kullaniciYetkileri', array('ky_modul' => 6, 'ky_kullaniciID' => $kullanici_id));
 		}
-		
+
 		if($post["giderler"]){
 			$m7Array2 = [];
 			foreach($post["giderler"] as $ps){
@@ -880,7 +1102,7 @@ class Yonetici extends CI_Controller {
 												$ch_borc = $borc;
 												$ch_turu = 2;
 
-												$this->db->query("INSERT INTO cariHareketleri (ch_belgeNumarasi,ch_turu,ch_cariID,ch_paraBirimi,ch_borc,ch_tarih,ch_olusturan,ch_olusturanAnaHesap,ch_olusturmaTarihi,ch_olusturmaSaati) VALUES ('".$belgeNumarasi."', $ch_turu, $cid, 'TL', $ch_borc, '".$tarih."', '106','91','".$tarih."','".$saat."')");
+												$this->db->query("INSERT INTO cariHareketleri (ch_belgeNumarasi,ch_turu,ch_cariID,ch_paraBirimi,ch_borc,ch_tarih,ch_olusturan,ch_olusturanAnaHesap,ch_olusturmaTarihi,ch_olusturmaSaati) VALUES ('".$belgeNumarasi."', $ch_turu, $cid, 'TL', $ch_borc, '".$tarih."', '106','91','".$tarih."','".$saati."')");
 											}
 										}
 
@@ -890,12 +1112,12 @@ class Yonetici extends CI_Controller {
 												$ch_turu = 8;
 												$ch_alacak = $alacak;
 
-												$this->db->query("INSERT INTO cariHareketleri (ch_belgeNumarasi,ch_turu,ch_cariID,ch_paraBirimi,ch_alacak,ch_tarih,ch_olusturan,ch_olusturanAnaHesap,ch_olusturmaTarihi,ch_olusturmaSaati) VALUES ('".$belgeNumarasi."', $ch_turu, $cid, 'TL', $ch_alacak, '".$tarih."', '106','91','".$tarih."','".$saat."')");
+												$this->db->query("INSERT INTO cariHareketleri (ch_belgeNumarasi,ch_turu,ch_cariID,ch_paraBirimi,ch_alacak,ch_tarih,ch_olusturan,ch_olusturanAnaHesap,ch_olusturmaTarihi,ch_olusturmaSaati) VALUES ('".$belgeNumarasi."', $ch_turu, $cid, 'TL', $ch_alacak, '".$tarih."', '106','91','".$tarih."','".$saati."')");
 											}else if($alacak == 0){
 												$ch_turu = 9;
 												$ch_borc = $borc;
 
-												$this->db->query("INSERT INTO cariHareketleri (ch_belgeNumarasi,ch_turu,ch_cariID,ch_paraBirimi,ch_borc,ch_tarih,ch_olusturan,ch_olusturanAnaHesap,ch_olusturmaTarihi,ch_olusturmaSaati) VALUES ('".$belgeNumarasi."', $ch_turu, $cid, 'TL', $ch_borc, '".$tarih."', '106','91','".$tarih."','".$saat."')");
+												$this->db->query("INSERT INTO cariHareketleri (ch_belgeNumarasi,ch_turu,ch_cariID,ch_paraBirimi,ch_borc,ch_tarih,ch_olusturan,ch_olusturanAnaHesap,ch_olusturmaTarihi,ch_olusturmaSaati) VALUES ('".$belgeNumarasi."', $ch_turu, $cid, 'TL', $ch_borc, '".$tarih."', '106','91','".$tarih."','".$saati."')");
 											}
 
 										}else if($turu == "Dekont"){
@@ -903,12 +1125,12 @@ class Yonetici extends CI_Controller {
 											if($borc == 0){
 												$ch_turu = 7;
 												$ch_alacak = $alacak;
-												$this->db->query("INSERT INTO cariHareketleri (ch_belgeNumarasi,ch_turu,ch_cariID,ch_paraBirimi,ch_alacak,ch_tarih,ch_olusturan,ch_olusturanAnaHesap,ch_olusturmaTarihi,ch_olusturmaSaati) VALUES ('".$belgeNumarasi."', $ch_turu, $cid, 'TL', $ch_alacak, '".$tarih."', '106','91','".$tarih."','".$saat."')");
+												$this->db->query("INSERT INTO cariHareketleri (ch_belgeNumarasi,ch_turu,ch_cariID,ch_paraBirimi,ch_alacak,ch_tarih,ch_olusturan,ch_olusturanAnaHesap,ch_olusturmaTarihi,ch_olusturmaSaati) VALUES ('".$belgeNumarasi."', $ch_turu, $cid, 'TL', $ch_alacak, '".$tarih."', '106','91','".$tarih."','".$saati."')");
 											}else if($alacak == 0){
 												$ch_turu = 7;
 												$ch_borc = $borc;
 
-												$this->db->query("INSERT INTO cariHareketleri (ch_belgeNumarasi,ch_turu,ch_cariID,ch_paraBirimi,ch_borc,ch_tarih,ch_olusturan,ch_olusturanAnaHesap,ch_olusturmaTarihi,ch_olusturmaSaati) VALUES ('".$belgeNumarasi."', $ch_turu, $cid, 'TL', $ch_borc, '".$tarih."', '106','91','".$tarih."','".$saat."')");
+												$this->db->query("INSERT INTO cariHareketleri (ch_belgeNumarasi,ch_turu,ch_cariID,ch_paraBirimi,ch_borc,ch_tarih,ch_olusturan,ch_olusturanAnaHesap,ch_olusturmaTarihi,ch_olusturmaSaati) VALUES ('".$belgeNumarasi."', $ch_turu, $cid, 'TL', $ch_borc, '".$tarih."', '106','91','".$tarih."','".$saati."')");
 											}
 
 										}else if($turu == "EFT"){
@@ -916,12 +1138,12 @@ class Yonetici extends CI_Controller {
 											if($borc == 0){
 												$ch_turu = 4;
 												$ch_alacak = $alacak;
-												$this->db->query("INSERT INTO cariHareketleri (ch_belgeNumarasi,ch_turu,ch_cariID,ch_paraBirimi,ch_alacak,ch_tarih,ch_olusturan,ch_olusturanAnaHesap,ch_olusturmaTarihi,ch_olusturmaSaati) VALUES ('".$belgeNumarasi."', $ch_turu, $cid, 'TL', $ch_alacak, '".$tarih."', '106','91','".$tarih."','".$saat."')");
+												$this->db->query("INSERT INTO cariHareketleri (ch_belgeNumarasi,ch_turu,ch_cariID,ch_paraBirimi,ch_alacak,ch_tarih,ch_olusturan,ch_olusturanAnaHesap,ch_olusturmaTarihi,ch_olusturmaSaati) VALUES ('".$belgeNumarasi."', $ch_turu, $cid, 'TL', $ch_alacak, '".$tarih."', '106','91','".$tarih."','".$saati."')");
 											}else if($alacak == 0){
 												$ch_turu = 4;
 												$ch_borc = $borc;
 
-												$this->db->query("INSERT INTO cariHareketleri (ch_belgeNumarasi,ch_turu,ch_cariID,ch_paraBirimi,ch_borc,ch_tarih,ch_olusturan,ch_olusturanAnaHesap,ch_olusturmaTarihi,ch_olusturmaSaati) VALUES ('".$belgeNumarasi."', $ch_turu, $cid, 'TL', $ch_borc, '".$tarih."', '106','91','".$tarih."','".$saat."')");
+												$this->db->query("INSERT INTO cariHareketleri (ch_belgeNumarasi,ch_turu,ch_cariID,ch_paraBirimi,ch_borc,ch_tarih,ch_olusturan,ch_olusturanAnaHesap,ch_olusturmaTarihi,ch_olusturmaSaati) VALUES ('".$belgeNumarasi."', $ch_turu, $cid, 'TL', $ch_borc, '".$tarih."', '106','91','".$tarih."','".$saati."')");
 											}
 
 										}else if($turu == "Evrak"){//olmayacak
@@ -930,12 +1152,12 @@ class Yonetici extends CI_Controller {
 												$ch_turu = 8;
 												$ch_alacak = $alacak;
 
-												$this->db->query("INSERT INTO cariHareketleri (ch_belgeNumarasi,ch_turu,ch_cariID,ch_paraBirimi,ch_alacak,ch_tarih,ch_olusturan,ch_olusturanAnaHesap,ch_olusturmaTarihi,ch_olusturmaSaati) VALUES ('".$belgeNumarasi."', $ch_turu, $cid, 'TL', $ch_alacak, '".$tarih."', '106','91','".$tarih."','".$saat."')");
+												$this->db->query("INSERT INTO cariHareketleri (ch_belgeNumarasi,ch_turu,ch_cariID,ch_paraBirimi,ch_alacak,ch_tarih,ch_olusturan,ch_olusturanAnaHesap,ch_olusturmaTarihi,ch_olusturmaSaati) VALUES ('".$belgeNumarasi."', $ch_turu, $cid, 'TL', $ch_alacak, '".$tarih."', '106','91','".$tarih."','".$saati."')");
 											}else if($alacak == 0){
 												$ch_turu = 9;
 												$ch_borc = $borc;
 
-												$this->db->query("INSERT INTO cariHareketleri (ch_belgeNumarasi,ch_turu,ch_cariID,ch_paraBirimi,ch_borc,ch_tarih,ch_olusturan,ch_olusturanAnaHesap,ch_olusturmaTarihi,ch_olusturmaSaati) VALUES ('".$belgeNumarasi."', $ch_turu, $cid, 'TL', $ch_borc, '".$tarih."', '106','91','".$tarih."','".$saat."')");
+												$this->db->query("INSERT INTO cariHareketleri (ch_belgeNumarasi,ch_turu,ch_cariID,ch_paraBirimi,ch_borc,ch_tarih,ch_olusturan,ch_olusturanAnaHesap,ch_olusturmaTarihi,ch_olusturmaSaati) VALUES ('".$belgeNumarasi."', $ch_turu, $cid, 'TL', $ch_borc, '".$tarih."', '106','91','".$tarih."','".$saati."')");
 											}
 
 										}else if($turu == "Havale"){
@@ -943,12 +1165,12 @@ class Yonetici extends CI_Controller {
 											if($borc == 0){
 												$ch_turu = 3;
 												$ch_alacak = $alacak;
-												$this->db->query("INSERT INTO cariHareketleri (ch_belgeNumarasi,ch_turu,ch_cariID,ch_paraBirimi,ch_alacak,ch_tarih,ch_olusturan,ch_olusturanAnaHesap,ch_olusturmaTarihi,ch_olusturmaSaati) VALUES ('".$belgeNumarasi."', $ch_turu, $cid, 'TL', $ch_alacak, '".$tarih."', '106','91','".$tarih."','".$saat."')");
+												$this->db->query("INSERT INTO cariHareketleri (ch_belgeNumarasi,ch_turu,ch_cariID,ch_paraBirimi,ch_alacak,ch_tarih,ch_olusturan,ch_olusturanAnaHesap,ch_olusturmaTarihi,ch_olusturmaSaati) VALUES ('".$belgeNumarasi."', $ch_turu, $cid, 'TL', $ch_alacak, '".$tarih."', '106','91','".$tarih."','".$saati."')");
 											}else if($alacak == 0){
 												$ch_turu = 3;
 												$ch_borc = $borc;
 
-												$this->db->query("INSERT INTO cariHareketleri (ch_belgeNumarasi,ch_turu,ch_cariID,ch_paraBirimi,ch_borc,ch_tarih,ch_olusturan,ch_olusturanAnaHesap,ch_olusturmaTarihi,ch_olusturmaSaati) VALUES ('".$belgeNumarasi."', $ch_turu, $cid, 'TL', $ch_borc, '".$tarih."', '106','91','".$tarih."','".$saat."')");
+												$this->db->query("INSERT INTO cariHareketleri (ch_belgeNumarasi,ch_turu,ch_cariID,ch_paraBirimi,ch_borc,ch_tarih,ch_olusturan,ch_olusturanAnaHesap,ch_olusturmaTarihi,ch_olusturmaSaati) VALUES ('".$belgeNumarasi."', $ch_turu, $cid, 'TL', $ch_borc, '".$tarih."', '106','91','".$tarih."','".$saati."')");
 											}
 
 										}else if($turu == "Nakit"){//olmayacak
@@ -960,12 +1182,12 @@ class Yonetici extends CI_Controller {
 												$ch_turu = 5;
 												$ch_alacak = $alacak;
 
-												$this->db->query("INSERT INTO cariHareketleri (ch_belgeNumarasi,ch_turu,ch_cariID,ch_paraBirimi,ch_alacak,ch_tarih,ch_olusturan,ch_olusturanAnaHesap,ch_olusturmaTarihi,ch_olusturmaSaati) VALUES ('".$belgeNumarasi."', $ch_turu, $cid, 'TL', $ch_alacak, '".$tarih."', '106','91','".$tarih."','".$saat."')");
+												$this->db->query("INSERT INTO cariHareketleri (ch_belgeNumarasi,ch_turu,ch_cariID,ch_paraBirimi,ch_alacak,ch_tarih,ch_olusturan,ch_olusturanAnaHesap,ch_olusturmaTarihi,ch_olusturmaSaati) VALUES ('".$belgeNumarasi."', $ch_turu, $cid, 'TL', $ch_alacak, '".$tarih."', '106','91','".$tarih."','".$saati."')");
 											}else if($alacak == 0){
 												$ch_turu = 6;
 												$ch_borc = $borc;
 
-												$this->db->query("INSERT INTO cariHareketleri (ch_belgeNumarasi,ch_turu,ch_cariID,ch_paraBirimi,ch_borc,ch_tarih,ch_olusturan,ch_olusturanAnaHesap,ch_olusturmaTarihi,ch_olusturmaSaati) VALUES ('".$belgeNumarasi."', $ch_turu, $cid, 'TL', $ch_borc, '".$tarih."', '106','91','".$tarih."','".$saat."')");
+												$this->db->query("INSERT INTO cariHareketleri (ch_belgeNumarasi,ch_turu,ch_cariID,ch_paraBirimi,ch_borc,ch_tarih,ch_olusturan,ch_olusturanAnaHesap,ch_olusturmaTarihi,ch_olusturmaSaati) VALUES ('".$belgeNumarasi."', $ch_turu, $cid, 'TL', $ch_borc, '".$tarih."', '106','91','".$tarih."','".$saati."')");
 											}
 
 										}
@@ -1026,7 +1248,7 @@ class Yonetici extends CI_Controller {
 				$kasaVarmi = $this->db->query($kasaVarmiQ)->row();
 				
 				if (!$kasaVarmi) {
-					// Kasa tablosuna kayıt ekle
+									// Kasa tablosuna kayıt ekle
 					$dataKasa = array(
 						"kasa_kodu" => $kasaKodu,
 						"kasa_adi" => $kasaAdi,
@@ -1070,4 +1292,654 @@ class Yonetici extends CI_Controller {
 	}
 
 
+	/**
+	 * Kullanıcı Grubu Yönetimi
+	 */
+	public function kullaniciGrubu(){
+		if(gibYetki()==1)
+			redirect("home/hata");
+
+		if(isDemoActive() == 1)
+			redirect("home/hata");
+
+		$data["baslik"] = "Yönetici / Kullanıcı Grupları";		$anaHesap = anaHesapBilgisi();
+
+		// Kullanıcı gruplarını getir
+		$gruplarQ = "SELECT kg.*, 
+					 COUNT(DISTINCT k.kullanici_id) as kullanici_sayisi,
+					 COUNT(DISTINCT kgy.kgy_id) as yetki_sayisi
+					 FROM kullanici_grubu kg 
+					 LEFT JOIN kullanicilar k ON kg.kg_id = k.grup_id 
+					 LEFT JOIN kullanici_grubu_yetkisi kgy ON kg.kg_id = kgy.kgy_grupID
+					 WHERE kg.kg_olusturanAnaHesap = '$anaHesap'
+					 GROUP BY kg.kg_id
+					 ORDER BY kg.kg_id DESC";
+		$data["gruplar"] = $this->db->query($gruplarQ)->result();
+
+		// Modül listesi
+		$data["moduller"] = [
+			1 => 'Cari',
+			2 => 'Stok', 
+			3 => 'Fatura',
+			4 => 'Kasa',
+			5 => 'Banka',
+			6 => 'Rapor',
+			7 => 'Giderler'
+		];
+
+		// Yetki listesi
+		$data["yetkiler"] = [
+			1 => 'Görüntüleme',
+			2 => 'Ekleme',
+			3 => 'Düzenleme', 
+			4 => 'Silme'
+		];
+
+		$this->load->view("yonetici/kullanici-grubu", $data);
+	}
+
+	public function kullaniciGrubuOlustur(){
+		if(gibYetki()==1)
+			redirect("home/hata");
+
+		if(isDemoActive() == 1)
+			redirect("home/hata");
+
+		$control2 = session("r", "login_info");
+		$u_id = $control2->kullanici_id;
+		$anaHesap = anaHesapBilgisi();
+
+		date_default_timezone_set('Europe/Istanbul');
+		$tarihi = (new DateTime('now'))->format('Y-m-d');
+		$saati = (new DateTime('now'))->format('H:i:s');
+
+		$data["kg_adi"] = postval("kg_adi");
+		$data["kg_aciklama"] = postval("kg_aciklama");
+		$data["kg_durum"] = 1;
+		$data["kg_olusturan"] = $u_id;
+		$data["kg_olusturanAnaHesap"] = $anaHesap;
+		$data["kg_olusturmaTarihi"] = $tarihi;
+		$data["kg_olusturmaSaati"] = $saati;
+
+		$this->vt->insert("kullanici_grubu", $data);
+		$grup_id = $this->db->insert_id();
+
+		// Seçilen yetkileri kaydet
+		$yetkiler = $this->input->post();
+		foreach($yetkiler as $key => $value){
+			if(strpos($key, 'yetki_') === 0 && is_array($value)){
+				$parts = explode('_', $key);
+				$modul = $parts[1];
+				
+				foreach($value as $yetki){
+					$dataYetki = array(
+						"kgy_grupID" => $grup_id,
+						"kgy_modul" => $modul,
+						"kgy_yetki" => $yetki,
+						"kgy_olusturan" => $u_id,
+						"kgy_olusturanAnaHesap" => $anaHesap,
+						"kgy_olusturmaTarihi" => $tarihi,
+						"kgy_olusturmaSaati" => $saati
+					);
+					$this->vt->insert("kullanici_grubu_yetkisi", $dataYetki);
+				}
+			}
+		}
+		$this->session->set_flashdata('kullanici_grubu_ok','OK');
+		redirect("yonetici/kullanici-grubu");
+	}	/**
+	 * Yeni kullanıcı grubu ekleme (POST handler)
+	 */
+	public function kullaniciGrubuEkle(){
+		if(gibYetki()==1)
+			redirect("home/hata");
+
+		if(isDemoActive() == 1)
+			redirect("home/hata");
+
+		$control2 = session("r", "login_info");
+		$u_id = $control2->kullanici_id;
+		$anaHesap = anaHesapBilgisi();
+
+		date_default_timezone_set('Europe/Istanbul');
+		$tarihi = (new DateTime('now'))->format('Y-m-d');
+		$saati = (new DateTime('now'))->format('H:i:s');
+
+		// Form verilerini al
+		$kg_adi = postval("kg_adi");
+		$kg_aciklama = postval("kg_aciklama");
+		// Basit doğrulama
+		if(empty($kg_adi)){
+			$this->session->set_flashdata('kullanici_grubu_hata','Grup adı boş olamaz!');
+			redirect("yonetici/kullaniciGrubu");
+			return;
+		}
+
+		$data["kg_adi"] = $kg_adi;
+		$data["kg_aciklama"] = $kg_aciklama;
+		$data["kg_durum"] = 1;
+		$data["kg_olusturan"] = $u_id;
+		$data["kg_olusturanAnaHesap"] = $anaHesap;
+		$data["kg_olusturmaTarihi"] = $tarihi;
+		$data["kg_olusturmaSaati"] = $saati;
+		try {
+			$this->vt->insert("kullanici_grubu", $data);
+			$this->session->set_flashdata('kullanici_grubu_ok','Kullanıcı Grubu başarıyla oluşturuldu!');
+		} catch (Exception $e) {
+			$this->session->set_flashdata('kullanici_grubu_hata','Grup eklenirken hata oluştu: ' . $e->getMessage());
+		}
+
+		redirect("yonetici/kullaniciGrubu");
+	}
+
+	public function kullaniciGrubuSil($id){
+		if(gibYetki()==1)
+			redirect("home/hata");
+
+		if(isDemoActive() == 1)
+			redirect("home/hata");
+
+		$anaHesap = anaHesapBilgisi();
+
+		// Grubun bu ana hesaba ait olduğunu kontrol et
+		$grupQ = "SELECT * FROM kullanici_grubu WHERE kg_id = '$id' AND kg_olusturanAnaHesap = '$anaHesap'";
+		$grup = $this->db->query($grupQ)->row();
+		if($grup){
+			// Bu gruba bağlı kullanıcıları güncelle (grup bağlantısını kaldır)
+			$this->db->query("UPDATE kullanicilar SET grup_id = NULL WHERE grup_id = '$id'");
+			
+			// Grup yetkilerini sil
+			$this->db->delete('kullanici_grubu_yetkisi', array('kgy_grupID' => $id));
+			
+			// Grubu sil
+			$this->db->delete('kullanici_grubu', array('kg_id' => $id));
+
+			$this->session->set_flashdata('kullanici_grubu_sil_ok','OK');
+		}
+
+		redirect("yonetici/kullanici-grubu");
+	}
+
+	public function kullaniciGrubuDuzenle($id){
+		if(gibYetki()==1)
+			redirect("home/hata");
+
+		if(isDemoActive() == 1)
+			redirect("home/hata");
+
+		$data["baslik"] = "Yönetici / Kullanıcı Grubu Düzenle";
+		$anaHesap = anaHesapBilgisi();
+
+		// Grup bilgilerini getir
+		$grupQ = "SELECT * FROM kullanici_grubu WHERE kg_id = '$id' AND kg_olusturanAnaHesap = '$anaHesap'";
+		$data["grup"] = $this->db->query($grupQ)->row();
+
+		if(!$data["grup"]){
+			redirect("yonetici/kullanici-grubu");
+		}
+
+		// Grup yetkilerini getir
+		$yetkilerQ = "SELECT * FROM kullanici_grubu_yetkisi WHERE kgy_grupID = '$id'";
+		$yetkilerResult = $this->db->query($yetkilerQ)->result();
+		
+		$data["grup_yetkileri"] = [];
+		foreach($yetkilerResult as $yetki){
+			$data["grup_yetkileri"][$yetki->kgy_modul][] = $yetki->kgy_yetki;
+		}
+
+		// Modül listesi
+		$data["moduller"] = [
+			1 => 'Cari',
+			2 => 'Stok', 
+			3 => 'Fatura',
+			4 => 'Kasa',
+			5 => 'Banka',
+			6 => 'Rapor',
+			7 => 'Giderler'
+		];
+
+		// Yetki listesi
+		$data["yetkiler"] = [
+			1 => 'Görüntüleme',
+			2 => 'Ekleme',
+			3 => 'Düzenleme', 
+			4 => 'Silme'
+		];
+
+		$this->load->view("yonetici/kullanici-grubu-duzenle", $data);
+	}
+
+	public function kullaniciGrubuGuncelle(){
+		if(gibYetki()==1)
+			redirect("home/hata");
+
+		if(isDemoActive() == 1)
+			redirect("home/hata");
+
+		$control2 = session("r", "login_info");
+		$u_id = $control2->kullanici_id;
+		$anaHesap = anaHesapBilgisi();
+
+		date_default_timezone_set('Europe/Istanbul');
+		$tarihi = (new DateTime('now'))->format('Y-m-d');
+		$saati = (new DateTime('now'))->format('H:i:s');
+
+		$grup_id = postval("kg_id");
+
+		$data["kg_adi"] = postval("kg_adi");
+		$data["kg_aciklama"] = postval("kg_aciklama");
+		$data["kg_guncelleyen"] = $u_id;
+		$data["kg_guncellemeTarihi"] = $tarihi;
+		$data["kg_guncellemeSaati"] = $saati;
+
+		$this->vt->update('kullanici_grubu', array('kg_id' => $grup_id), $data);
+
+		// Mevcut yetkileri sil
+		$this->db->delete('kullanici_grubu_yetkisi', array('kgy_grupID' => $grup_id));
+
+		// Yeni yetkileri kaydet
+		$yetkiler = $this->input->post();
+		foreach($yetkiler as $key => $value){
+			if(strpos($key, 'yetki_') === 0 && is_array($value)){
+				$parts = explode('_', $key);
+				$modul = $parts[1];
+				
+				foreach($value as $yetki){
+					$dataYetki = array(
+						"kgy_grupID" => $grup_id,
+						"kgy_modul" => $modul,
+						"kgy_yetki" => $yetki,
+						"kgy_olusturan" => $u_id,
+						"kgy_olusturanAnaHesap" => $anaHesap,
+						"kgy_olusturmaTarihi" => $tarihi,
+						"kgy_olusturmaSaati" => $saati
+					);
+					$this->vt->insert("kullanici_grubu_yetkisi", $dataYetki);
+				}
+			}		}
+
+		$this->session->set_flashdata('kullanici_grubu_guncelle_ok','OK');
+		redirect("yonetici/kullaniciGrubu");
+	}
+	/**
+	 * AJAX endpoint to get all countries (for responsibility areas modal)
+	 */	public function getCountries(){
+		$ulkelerQ = "SELECT ulke_kodu as country_code, ulke_adi as country_name FROM ulkeler ORDER BY ulke_adi ASC";
+		$ulkeler = $this->db->query($ulkelerQ);
+		
+		if ($ulkeler->num_rows() > 0) {
+			$countryList = array();
+			foreach ($ulkeler->result() as $item) {				$countryList[] = array(
+					'code' => $item->country_code, 
+					'name' => $item->country_name
+				);
+			}
+			$data = array('status' => 'ok', 'message' => '', 'data' => $countryList);
+		} else {
+			$data = array('status' => 'error', 'message' => 'Ülke Bulunamadı..!');
+		}
+		
+		$this->output->set_content_type('application/json')->set_output(json_encode($data));
+	}
+	/**
+	 * AJAX endpoint to get all provinces (for responsibility areas modal)
+	 * Enhanced to support country filtering
+	 */
+	public function getProvinces(){
+		$ulke_kodu = $this->input->post('ulke_kodu');
+		
+		// Base query for provinces
+		if (!empty($ulke_kodu)) {
+			// If iller table has ulke_kodu column, filter by it
+			// For now, assume Turkey (code 1) gets all provinces, others get none
+			if ($ulke_kodu == '1') {
+				$illerQ = "SELECT id, il FROM iller ORDER BY il ASC";
+			} else {
+				// For other countries, return empty result or handle appropriately
+				$illerQ = "SELECT id, il FROM iller WHERE 1=0"; // No results for non-Turkey countries
+			}
+		} else {
+			// Default: get all Turkish provinces
+			$illerQ = "SELECT id, il FROM iller ORDER BY il ASC";
+		}
+		
+		$iller = $this->db->query($illerQ);
+		
+		if ($iller->num_rows() > 0) {
+			$provinceList = array();
+			foreach ($iller->result() as $item) {
+				$provinceList[] = array(
+					'id' => $item->id, 
+					'il' => $item->il
+				);
+			}
+			$data = array('status' => 'success', 'message' => '', 'data' => $provinceList);
+		} else {
+			$data = array('status' => 'error', 'message' => 'Bu ülke için il bulunamadı');
+		}
+		
+		$this->output->set_content_type('application/json')->set_output(json_encode($data));
+	}
+	/**
+	 * AJAX endpoint to get districts for a province (for responsibility areas)
+	 */	public function getDistricts(){
+		$il_id = $this->input->post('il_id');
+		
+		if (empty($il_id)) {
+			$data = array('status' => 'error', 'message' => 'İl ID Bilgisi Alınamadı');
+		} else {
+			$ilceler = $this->db->get_where('ilceler', array('il_id' => $il_id));
+			if ($ilceler->num_rows() > 0) {
+				$ilceList = array();
+				foreach ($ilceler->result() as $item) {
+					$ilceList[] = array('id' => $item->id, 'ilce' => $item->ilce);
+				}
+				$data = array('status' => 'success', 'message' => '', 'data' => $ilceList);
+			} else {
+				$data = array('status' => 'error', 'message' => 'Bu il için ilçe bulunamadı');
+			}
+		}
+		$this->output->set_content_type('application/json')->set_output(json_encode($data));
+	}
+	/**
+	 * AJAX - Sorumluluk Bölgesi Ekle
+	 */
+	public function addResponsibilityArea(){
+		$this->output->set_content_type('application/json');
+		
+		if(gibYetki() == 1) {
+			echo json_encode(['success' => false, 'message' => 'Yetkiniz yok']);
+			return;
+		}
+
+		$control2 = session("r", "login_info");
+		$u_id = $control2->kullanici_id;
+
+		$kullanici_id = $this->input->post('kullanici_id');
+		$il_id = $this->input->post('il_id');
+		$ilce_id = $this->input->post('ilce_id');
+
+		if(!$kullanici_id || !$il_id || !$ilce_id) {
+			echo json_encode(['success' => false, 'message' => 'Eksik parametreler']);
+			return;
+		}
+
+		// Önce aynı kayıt var mı kontrol et
+		$existing = $this->db->get_where('kullanici_sorumluluk_bolgesi', [
+			'kullanici' => $kullanici_id,
+			'il_id' => $il_id,
+			'ilce_id' => $ilce_id,
+			'durum' => 1
+		])->row();
+
+		if($existing) {
+			echo json_encode(['success' => false, 'message' => 'Bu bölge zaten mevcut']);
+			return;
+		}
+
+		$data = [
+			'kullanici' => $kullanici_id,
+			'il_id' => $il_id,
+			'ilce_id' => $ilce_id,
+			'islemi_yapan' => $u_id,
+			'islem_tarihi' => date('Y-m-d H:i:s'),
+			'durum' => 1
+		];
+
+		$result = $this->db->insert('kullanici_sorumluluk_bolgesi', $data);
+		
+		if($result) {
+			echo json_encode(['success' => true, 'message' => 'Sorumluluk bölgesi başarıyla eklendi']);
+		} else {
+			echo json_encode(['success' => false, 'message' => 'Kayıt eklenirken hata oluştu']);
+		}
+	}
+
+	/**
+	 * AJAX - Sorumluluk Bölgesi Sil
+	 */
+	public function deleteResponsibilityArea(){
+		$this->output->set_content_type('application/json');
+		
+		if(gibYetki() == 1) {
+			echo json_encode(['success' => false, 'message' => 'Yetkiniz yok']);
+			return;
+		}
+
+		$control2 = session("r", "login_info");
+		$u_id = $control2->kullanici_id;
+
+		$id = $this->input->post('id');
+
+		if(!$id) {
+			echo json_encode(['success' => false, 'message' => 'ID parametresi eksik']);
+			return;
+		}
+
+		// Kayıt var mı kontrol et
+		$existing = $this->db->get_where('kullanici_sorumluluk_bolgesi', [
+			'sorumluluk_id' => $id,
+			'durum' => 1
+		])->row();
+
+		if(!$existing) {
+			echo json_encode(['success' => false, 'message' => 'Kayıt bulunamadı']);
+			return;
+		}
+
+		// Silmek yerine durumu pasif yap
+		$data = [
+			'durum' => 0,
+			'islemi_yapan' => $u_id,
+			'islem_tarihi' => date('Y-m-d H:i:s')
+		];
+
+		$result = $this->db->where('sorumluluk_id', $id)->update('kullanici_sorumluluk_bolgesi', $data);
+		
+		if($result) {
+			echo json_encode(['success' => true, 'message' => 'Sorumluluk bölgesi başarıyla silindi']);
+		} else {
+			echo json_encode(['success' => false, 'message' => 'Silme işlemi sırasında hata oluştu']);
+		}
+	}
+	
+	// Çoklu sorumluluk bölgesi ekleme
+	public function addMultipleResponsibilityAreas(){
+		if(gibYetki() == 1) {
+			echo json_encode(['status' => 'error', 'message' => 'Yetkiniz yok']);
+			return;
+		}
+
+		$control2 = session("r", "login_info");
+		$u_id = $control2->kullanici_id;
+		$anaHesap = anaHesapBilgisi();
+
+		$regions = $this->input->post('regions');
+
+		// Validation
+		if(!$regions || !is_array($regions) || empty($regions)) {
+			echo json_encode(['status' => 'error', 'message' => 'Eksik parametre']);
+			return;
+		}
+
+		$successCount = 0;
+		$duplicateCount = 0;
+		$errorCount = 0;
+		$addedRegions = [];
+		$errors = [];
+		foreach($regions as $region) {
+			$kullanici_id = $region['kullanici_id'] ?? null;
+			$ulke_kodu = $region['ulke_kodu'] ?? null;
+			$il_id = $region['il_id'] ?? null;
+			$ilce_id = $region['ilce_id'] ?? null;
+			$durum = $region['durum'] ?? 1;
+			$baslangic_tarihi = $region['baslangic_tarihi'] ?? null;
+			$bitis_tarihi = $region['bitis_tarihi'] ?? null;
+			$aciklama = $region['aciklama'] ?? null;
+
+			// Her bölge için validation
+			if(!$kullanici_id || !$il_id || !$ilce_id) {
+				$errorCount++;
+				$errors[] = "Eksik parametre: Kullanıcı, İl veya İlçe ID";
+				continue;
+			}
+
+			// Tarih validasyonu
+			if($baslangic_tarihi && $bitis_tarihi && $baslangic_tarihi > $bitis_tarihi) {
+				$errorCount++;
+				$errors[] = "Geçersiz tarih aralığı";
+				continue;
+			}			// Duplicate kontrolü
+			$existing = $this->db->get_where('kullanici_sorumluluk_bolgesi', [
+				'kullanici' => $kullanici_id,
+				'ulke_kodu' => $ulke_kodu,
+				'il_id' => $il_id,
+				'ilce_id' => $ilce_id,
+				'durum' => 1 // Aktif kayıtları kontrol et
+			])->row();
+
+			if($existing) {
+				$duplicateCount++;
+				continue;
+			}			// Veritabanına ekle
+			$data = [
+				'kullanici' => $kullanici_id,
+				'ulke_kodu' => !empty($ulke_kodu) ? $ulke_kodu : '1', // Default to Turkey
+				'il_id' => $il_id,
+				'ilce_id' => $ilce_id,
+				'durum' => $durum,
+				'islemi_yapan' => $u_id,
+				'islem_tarihi' => date('Y-m-d H:i:s')
+			];
+
+			// Ek alanları ekle (eğer migration yapıldıysa)
+			if($baslangic_tarihi) {
+				$data['baslangic_tarihi'] = $baslangic_tarihi;
+			}
+			if($bitis_tarihi) {
+				$data['bitis_tarihi'] = $bitis_tarihi;
+			}
+			if($aciklama) {
+				$data['aciklama'] = $aciklama;
+			}
+
+			$result = $this->db->insert('kullanici_sorumluluk_bolgesi', $data);
+			
+			if($result) {
+				$successCount++;
+				
+				// İl ve ilçe isimlerini al
+				$il = $this->db->get_where('iller', ['id' => $il_id])->row();
+				$ilce = $this->db->get_where('ilceler', ['id' => $ilce_id])->row();
+				
+				$addedRegions[] = [
+					'id' => $this->db->insert_id(),
+					'il_adi' => $il ? $il->il : '',
+					'ilce_adi' => $ilce ? $ilce->ilce : '',
+					'durum' => $durum,
+					'baslangic_tarihi' => $baslangic_tarihi,
+					'bitis_tarihi' => $bitis_tarihi,
+					'aciklama' => $aciklama,
+					'islem_tarihi' => date('Y-m-d H:i:s')
+				];
+			} else {
+				$errorCount++;
+				$errors[] = "Veritabanı hatası";
+			}
+		}
+
+		// Sonuç mesajı oluştur
+		$message = '';
+		if($successCount > 0) {
+			$message .= $successCount . ' bölge başarıyla eklendi. ';
+		}
+		if($duplicateCount > 0) {
+			$message .= $duplicateCount . ' bölge zaten mevcut. ';
+		}
+		if($errorCount > 0) {
+			$message .= $errorCount . ' bölgede hata oluştu. ';
+		}
+
+		if($successCount > 0) {
+			echo json_encode([
+				'status' => 'success', 
+				'message' => trim($message),
+				'data' => $addedRegions,
+				'stats' => [
+					'success' => $successCount,
+					'duplicate' => $duplicateCount,
+					'error' => $errorCount
+				]
+			]);
+		} else {
+			echo json_encode([
+				'status' => 'error', 
+				'message' => $errorCount > 0 ? 'Hiçbir bölge eklenemedi: ' . implode(', ', array_unique($errors)) : 'Hiçbir bölge eklenmedi'
+			]);
+		}
+	}
+	/**
+	 * Backward compatibility alias for the old method name
+	 */
+	public function kullaniciSorumlulukEkle(){
+		return $this->addResponsibilityArea();
+	}
+
+	/**
+	 * Sorumluluk Bölgesi Yönetimi Sayfası
+	 */
+	public function sorumlulukBolgesi(){
+		$data["baslik"] = "Yönetici / Sorumluluk Bölgesi Yönetimi";
+		// Kullanıcıları çek
+		$data["kullanicilar"] = $this->db->query("
+			SELECT kullanici_id, kullanici_ad, kullanici_soyad, kullanici_kullaniciAdi as kullanici_adi 
+			FROM kullanicilar 
+			WHERE kullanici_durum = 1 
+			ORDER BY kullanici_ad, kullanici_soyad
+		")->result();
+				// İlleri çek
+		$data["iller"] = $this->db->query("
+			SELECT DISTINCT id as il_id, il as il_adi 
+			FROM iller 
+			ORDER BY il
+		")->result();
+				// Mevcut sorumluluk bölgelerini çek
+		$data["sorumluluk_bolgeler"] = $this->db->query("
+			SELECT 
+				ksb.*,
+				k.kullanici_ad,
+				k.kullanici_soyad,
+				i.il as il_adi,
+				ic.ilce as ilce_adi
+			FROM kullanici_sorumluluk_bolgesi ksb
+			LEFT JOIN kullanicilar k ON ksb.kullanici = k.kullanici_id
+			LEFT JOIN iller i ON ksb.il_id = i.id
+			LEFT JOIN ilceler ic ON ksb.ilce_id = ic.id
+			WHERE ksb.durum = 1
+			ORDER BY k.kullanici_ad, i.il, ic.ilce
+		")->result();
+		
+		$this->load->view('include/header', $data);
+		$this->load->view('yonetici/sorumluluk-bolgesi', $data);
+		$this->load->view('include/footer');
+	}
+	/**
+	 * AJAX - İlçeleri Getir
+	 */
+	public function ilceler(){
+		$this->output->set_content_type('application/json');
+		
+		$il_id = $this->input->post('il_id');
+		
+		if(!$il_id) {
+			echo json_encode([]);
+			return;
+		}
+		
+		$ilceler = $this->db->query("
+			SELECT id as ilce_id, ilce as ilce_adi 
+			FROM ilceler 
+			WHERE il_id = ? 
+			ORDER BY ilce		", [$il_id])->result();
+				echo json_encode($ilceler);	}
 }

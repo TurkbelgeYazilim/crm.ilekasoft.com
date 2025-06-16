@@ -3,8 +3,7 @@
 <head>
 		<?php $this->load->view("include/head-tags"); ?>
 		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" integrity="sha512-vKMx8UnXk60zUwyUnUPM3HbQo8QfmNx7+ltw8Pm5zLusl1XIfwcxo8DbWCqMGKaWeNxWA8yrx5v3SaVpMvR3CA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-		
-		<style>
+				<style>
 	       .ui-autocomplete {
 	       		z-index: 999999;
 	            max-height: 200px;
@@ -20,6 +19,14 @@
 	        .card{
 	        	.margin-bottom:  0px!important;
 	        } 
+	        
+	        /* Hide Stok Kodu (Stock Code) and Birim (Unit) columns */
+			.table th:nth-child(3), /* Stok Kodu header */
+			.table td:nth-child(3), /* Stok Kodu data cells */
+			.table th:nth-child(6), /* Birim header */
+			.table td:nth-child(6) { /* Birim data cells */
+				display: none !important;
+			}
 		</style>
 </head>
 	<body>
@@ -147,11 +154,9 @@
 										<div class="col-md-2">
 											
 										</div>
-										<div class="col-md-5">
-
-											<div class="col-md-12">
+										<div class="col-md-5">											<div class="col-md-12">
 												<div class="form-group row">
-													<label class="col-sm-4 text-sm-left pt-2"><a href="<?= base_url("fatura/goruntule?tipi=alis&id=$alisFaturasi->alis_id"); ?>" target="_blank">Fatura No <i class="fa fa-external-link-alt"></i></a></label>
+													<label class="col-sm-4 text-sm-left pt-2"><a href="<?= base_url("fatura/goruntule?tipi=alis&id=$alisFaturasi->alis_id"); ?>" target="_blank">Sözleşme No <span style="color: red;">*</span> <i class="fa fa-external-link-alt"></i></a></label>
 													<div class="col-sm-8">
 														<input type="text" class="form-control" name="alis_faturaNo" required="" autocomplete="off" value="<?= $alisFaturasi->alis_faturaNo; ?>">
 													</div>
@@ -326,8 +331,7 @@ $x=1;
 									</div>
 									<div class="row">
 										<div class="col-md-12">
-												<h4 class="card-title mt-4">Fatura Alt Bilgileri</h4>
-												<div class="row">
+												<h4 class="card-title mt-4">Fatura Alt Bilgileri</h4>												<div class="row">
 													<div class="col-md-12">
 														<div class="form-group">
 															<label>Açıklama</label>
@@ -335,6 +339,17 @@ $x=1;
 														</div>
 													</div>
 												</div>
+												<!-- Dosya Yükleme Alanı -->
+												<div class="row">
+													<div class="col-md-12">
+														<div class="form-group">
+															<label>Satış sözleşmesini lütfen buraya yükleyiniz <span style="color: red;">*</span></label>
+															<input type="file" class="form-control" name="fatura_dosya[]" multiple accept="*/*" required>
+															<small class="form-text text-muted">Desteklenen dosya türleri: PDF, DOC, DOCX, JPG, JPEG, PNG, GIF, TXT, XLSX, XLS (Çoklu dosya seçilebilir)</small>
+														</div>
+													</div>
+												</div>
+												<!-- /Dosya Yükleme Alanı -->
 										</div>
 									</div>
 									<button type="submit" class="btn btn-danger" style="width:100%;">Güncelle</button>
@@ -471,18 +486,16 @@ $(function(){
 
 				for(iy = 1; iy<=items; iy++){
 					counter.push(1);
-				}
-
-				function addItem() {
+				}				function addItem() {
 					items++;
 					counter.push(items);
 					var html = "<tr>";
 						html += "<td><a href='#' class='btn btn-success btn-sm' data-toggle='modal' data-target='#edit_category' data-id='"+items+"'><i class='fa fa-hand-pointer'></i> Seç</a></td>";
 						html += "<td><input type='text' class='form-control' name='stokadi[]' id='stokadi"+items+"' readonly></td>";
-						html += "<td><input type='text' class='form-control' name='stokkodu[]' id='stokkodu"+items+"' readonly></td>";
+						html += "<td style='display:none'><input type='text' class='form-control' name='stokkodu[]' id='stokkodu"+items+"' readonly></td>";
 					    html += "<td><input type='hidden' name='stokid[]' id='stokid"+items+"'><input type='text' class='form-control' name='barkod[]' id='barkod"+items+"' readonly></td>";
 					    html += "<td><input type='number' step='0.01' class='form-control' onkeydown='event.preventDefault()' autocomplete='off' name='miktar[]' id='miktar"+items+"' required='' style='width:175px;'></td>";
-					    html += "<td><input type='text' class='form-control' name='birim[]' id='birim"+items+"' readonly></td>";
+					    html += "<td style='display:none'><input type='text' class='form-control' name='birim[]' id='birim"+items+"' readonly></td>";
 					    html += "<td><input type='number' step='0.001' class='form-control' onkeydown='event.preventDefault()' autocomplete='off' name='birimfiyat[]' id='birimfiyat"+items+"' required=''></td>";
 					    html += "<td><input type='text' class='form-control' name='kdv[]' id='kdv"+items+"' readonly></td>";
 					    html += "<td><input type='text' class='form-control' name='toplam[]' id='toplam"+items+"' readonly></td>";

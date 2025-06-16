@@ -10,8 +10,12 @@ $route['cari/cari-listesi'] = 'cari/cariListesi';
 $route['cari/cari-listesi/(:num)'] = 'cari/cariListesi';
 $route['cari/cari-hareketleri'] = 'cari/cariHareketleri';
 $route['cari/cari-gruplari'] = 'cari/cariGruplari';
-$route['cari/cari-karti-olustur'] = 'cari/cariKartiOlustur';
-$route['cari/cari-karti-duzenle/(:num)'] = 'cari/cariKartiDuzenle/$1';
+// Unified cari form routes
+$route['cari/cari-karti-olustur'] = 'cari/cariForm';
+$route['cari/cari-karti-duzenle/(:num)'] = 'cari/cariForm/$1';
+// Legacy routes (backward compatibility)
+$route['cari/cari-karti-olustur-legacy'] = 'cari/cariKartiOlustur';
+$route['cari/cari-karti-duzenle-legacy/(:num)'] = 'cari/cariKartiDuzenle/$1';
 $route['cari/cari-dekont'] = 'cari/cariDekont';
 $route['cari/cari-dekont-duzenle/(:num)'] = 'cari/cariDekontDuzenle/$1';
 
@@ -151,6 +155,7 @@ $route["yonetici/kullanici-yetkileri-duzenle"] = 'yonetici/kullaniciYetkileriDuz
 $route["yonetici/mevcut-kullanici-duzenle/(:num)"] = 'yonetici/mevcutKullaniciDuzenle/$1';
 $route["yonetici/kullanici-listesi"] = 'yonetici/kullaniciListesi';
 $route["yonetici/kullanici-listesi/(:num)"] = 'yonetici/kullaniciListesi';
+$route["yonetici/sorumluluk-bolgesi"] = 'yonetici/sorumlulukBolgesi';
 $route["yonetici/ayarlar"] = 'yonetici/ayarlar';
 
 $route["yonetici/yukle/(:num)"] = 'yonetici/yukle/$1';
@@ -177,3 +182,69 @@ $route['translate_uri_dashes'] = FALSE;
 
 $route['tahsilat/tahsilat_kaydet'] = 'tahsilat/tahsilat_kaydet';
 $route['tahsilat/tahsilat-olustur'] = 'tahsilat/tahsilat_olustur';
+
+// Teklif modülü
+$route['teklif/teklif-hazirla'] = 'teklif/teklif_hazirla';
+$route['teklif/teklif-listele'] = 'teklif/teklif_listele';
+$route['teklif/teklif-ayar'] = 'teklif/teklif_ayar';
+$route['teklif/potansiyel-cari-filtrele'] = 'teklif/potansiyelCariFiltrele';
+// Teklif Ayarları AJAX endpointleri
+$route['teklif/sezonlar-listele'] = 'teklif/sezonlar_listele';
+$route['teklif/sezon-ekle'] = 'teklif/sezon_ekle';
+$route['teklif/sezon-guncelle'] = 'teklif/sezon_guncelle';
+$route['teklif/sezon-sil'] = 'teklif/sezon_sil';
+$route['teklif/cari-gruplar-listele'] = 'teklif/cari_gruplar_listele';
+$route['teklif/cari-grup-ekle'] = 'teklif/cari_grup_ekle';
+$route['teklif/cari-grup-guncelle'] = 'teklif/cari_grup_guncelle';
+$route['teklif/cari-grup-sil'] = 'teklif/cari_grup_sil';
+$route['teklif/sektorler-listele'] = 'teklif/sektorler_listele';
+$route['teklif/sektor-ekle'] = 'teklif/sektor_ekle';
+$route['teklif/sektor-guncelle'] = 'teklif/sektor_guncelle';
+$route['teklif/sektor-sil'] = 'teklif/sektor_sil';
+$route['teklif/telefon_search'] = 'teklif/telefon_search';
+
+// Prim modülü
+$route['prim/prim-hazirla'] = 'prim/prim_hazirla';
+$route['prim/prim-listele'] = 'prim/prim_listele';
+$route['prim/prim-ayar'] = 'prim/prim_ayar';
+$route['prim/potansiyel-cari-filtrele'] = 'prim/potansiyelCariFiltrele';
+$route['prim/potansiyel_cari_autocomplete'] = 'prim/potansiyel_cari_autocomplete';
+$route['prim/potansiyel_satis_ekle'] = 'prim/potansiyel_satis_ekle';
+$route['prim/get_cari_primler'] = 'prim/get_cari_primler';
+$route['prim/get_potansiyel_mahalleler'] = 'prim/get_potansiyel_mahalleler';
+// Prim Ayarları AJAX endpointleri
+$route['prim/sezonlar-listele'] = 'prim/sezonlar_listele';
+$route['prim/sezon-ekle'] = 'prim/sezon_ekle';
+$route['prim/sezon-guncelle'] = 'prim/sezon_guncelle';
+$route['prim/sezon-sil'] = 'prim/sezon_sil';
+$route['prim/cari-gruplar-listele'] = 'prim/cari_gruplar_listele';
+$route['prim/cari-grup-ekle'] = 'prim/cari_grup_ekle';
+$route['prim/cari-grup-guncelle'] = 'prim/cari_grup_guncelle';
+$route['prim/cari-grup-sil'] = 'prim/cari_grup_sil';
+$route['prim/sektorler-listele'] = 'prim/sektorler_listele';
+$route['prim/sektor-ekle'] = 'prim/sektor_ekle';
+$route['prim/sektor-guncelle'] = 'prim/sektor_guncelle';
+$route['prim/sektor-sil'] = 'prim/sektor_sil';
+$route['prim/telefon_search'] = 'prim/telefon_search';
+
+// İllegal modülü
+$route['illegal/illegal-hazirla'] = 'illegal/illegal_hazirla';
+$route['illegal/illegal-listele'] = 'illegal/illegal_listele';
+$route['illegal/illegal-ayar'] = 'illegal/illegal_ayar';
+$route['illegal/potansiyel-cari-filtrele'] = 'illegal/potansiyelCariFiltrele';
+$route['illegal/potansiyel_cari_autocomplete'] = 'illegal/potansiyel_cari_autocomplete';
+$route['illegal/potansiyel_satis_ekle'] = 'illegal/potansiyel_satis_ekle';
+// İllegal Ayarları AJAX endpointleri
+$route['illegal/sezonlar-listele'] = 'illegal/sezonlar_listele';
+$route['illegal/sezon-ekle'] = 'illegal/sezon_ekle';
+$route['illegal/sezon-guncelle'] = 'illegal/sezon_guncelle';
+$route['illegal/sezon-sil'] = 'illegal/sezon_sil';
+$route['illegal/cari-gruplar-listele'] = 'illegal/cari_gruplar_listele';
+$route['illegal/cari-grup-ekle'] = 'illegal/cari_grup_ekle';
+$route['illegal/cari-grup-guncelle'] = 'illegal/cari_grup_guncelle';
+$route['illegal/cari-grup-sil'] = 'illegal/cari_grup_sil';
+$route['illegal/sektorler-listele'] = 'illegal/sektorler_listele';
+$route['illegal/sektor-ekle'] = 'illegal/sektor_ekle';
+$route['illegal/sektor-guncelle'] = 'illegal/sektor_guncelle';
+$route['illegal/sektor-sil'] = 'illegal/sektor_sil';
+$route['illegal/telefon_search'] = 'illegal/telefon_search';

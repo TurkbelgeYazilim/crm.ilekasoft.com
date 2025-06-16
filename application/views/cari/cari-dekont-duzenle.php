@@ -3,7 +3,6 @@
 <head>
 		<?php $this->load->view("include/head-tags"); ?>
 		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" integrity="sha512-vKMx8UnXk60zUwyUnUPM3HbQo8QfmNx7+ltw8Pm5zLusl1XIfwcxo8DbWCqMGKaWeNxWA8yrx5v3SaVpMvR3CA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-
 		<style>
 	       .ui-autocomplete {
 	       		z-index: 999999;
@@ -13,7 +12,14 @@
 	            overflow-x: hidden;
 	            /* add padding to account for vertical scrollbar */
 	            padding-right: 20px;
-	        } 
+	        }
+	        
+	        /* Mobilde Önceki Sayfa butonunu gizle */
+			@media (max-width: 767.98px) {
+				.col-sm-2 {
+					display: none !important;
+				}
+			}
 		</style>
 </head>
 	<body>

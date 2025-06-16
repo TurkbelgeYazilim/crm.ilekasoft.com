@@ -156,12 +156,11 @@ class Kayit extends CI_Controller
 
 		$data_u["kullanici_eposta"] = $yetkilieposta;
 		$data_u["kullanici_ad"] = $yetkili_ad;
-		$data_u["kullanici_soyad"] = $yetkili_soyad;
-		$data_u["kullanici_kullaniciAdi"] = $vkntckn;
-		$data_u["kullanici_sifre"] = $sifreMD5;
-		$data_u["kullanici_yetki"] = 1;
+		$data_u["kullanici_soyad"] = $yetkili_soyad;		$data_u["kullanici_kullaniciAdi"] = $vkntckn;
+		$data_u["kullanici_sifre"] = $sifreMD5;		$data_u["kullanici_yetki"] = 1; // For backward compatibility with admin system
+		$data_u["kullanici_grupID"] = 1; // Tam Yetki grubu (Full Access group)
 		$data_u["kullanici_durum"] = 1;
-		$data_u["kullanici_anaHesapID"] = $a_id;
+		$data_u["kullanici_sorumluMudur"] = $a_id;
 		$data_u["kullanici_olusturmaTarihi"] = $tarihsaat;
 		$data_u["kullanici_demo"] = 1;
 		$data_u["kullanici_demoSonTarihi"] = $demoSonTarih;

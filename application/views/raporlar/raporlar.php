@@ -85,25 +85,15 @@ a.wrimagecard:hover, .wrimagecard-topimage:hover {
 					<!-- /Page Header -->
 
 					<?php 
-							$control2 = session("r", "login_info");
-							$u_id = $control2->kullanici_id;
-							$yetki = $control2->kullanici_yetki;
-
-							$anaHesap = anaHesapBilgisi();
-
-							//raporlar
-							$yetkiSorgula1_rapor = yetkiSorgula($u_id,6,1);
-							$yetkiSorgula2_rapor = yetkiSorgula($u_id,6,2);
-							$yetkiSorgula3_rapor = yetkiSorgula($u_id,6,3);
-							$yetkiSorgula4_rapor = yetkiSorgula($u_id,6,4);
-							$yetkiSorgula5_rapor = yetkiSorgula($u_id,6,5);
-							$yetkiSorgula6_rapor = yetkiSorgula($u_id,6,6);
-							$yetkiSorgula7_rapor = yetkiSorgula($u_id,6,7);
-					?>
+    $control2 = session("r", "login_info");
+    $u_id = $control2->kullanici_id;
+    $yetki = $control2->kullanici_yetki;
+    $anaHesap = anaHesapBilgisi();
+?>
 
 <?php if($yetki == 1){?>
 <!--test-->
-	<div class="row">
+<div class="row">
     <div class="col-md-3 col-sm-4">
       <div class="wrimagecard wrimagecard-topimage">
           <a href="javascript:void(0);">
@@ -114,17 +104,17 @@ a.wrimagecard:hover, .wrimagecard-topimage:hover {
             <h4><center>Operasyon</center> 
             <div class="pull-right badge" id="WrControls"></div></h4>
             <hr>
-						<li><a href="<?= base_url("#"); ?>" style="color:#000;">Vadesi Geçen Senetler</a></li>
-						<li><a href="<?= base_url("#"); ?>" style="color:#000;">Vadesi Geçen Açık Hesaplar</a></li>
-						<li><a href="<?= base_url("#"); ?>" style="color:#000;">Yayını Kapatılacaklar</a></li>
-						<li><a href="<?= base_url("#"); ?>" style="color:#000;">Hukuk İşlemi Başlatılacaklar</a></li>
-						<li><a href="<?= base_url("#"); ?>" style="color:#000;">İcraya Verilenler</a></li>
-						<li><a href="<?= base_url("#"); ?>" style="color:#000;">İcra Problemliler</a></li>
+            <li><a href="<?= base_url("#"); ?>" style="color:#000;">Vadesi Geçen Senetler</a></li>
+            <li><a href="<?= base_url("#"); ?>" style="color:#000;">Vadesi Geçen Açık Hesaplar</a></li>
+            <li><a href="<?= base_url("#"); ?>" style="color:#000;">Yayını Kapatılacaklar</a></li>
+            <li><a href="<?= base_url("#"); ?>" style="color:#000;">Hukuk İşlemi Başlatılacaklar</a></li>
+            <li><a href="<?= base_url("#"); ?>" style="color:#000;">İcraya Verilenler</a></li>
+            <li><a href="<?= base_url("#"); ?>" style="color:#000;">İcra Problemliler</a></li>
           </div>
         </a>
       </div>
-</div>
-	<div class="col-md-3 col-sm-4">
+    </div>
+    <div class="col-md-3 col-sm-4">
       <div class="wrimagecard wrimagecard-topimage">
           <a href="javascript:void(0);">
           <div class="wrimagecard-topimage_header" style="background-image: url('<?= env('BASE_URL'); ?>/assets/img/reports_image_4.jpg');">
@@ -136,11 +126,10 @@ a.wrimagecard:hover, .wrimagecard-topimage:hover {
             <hr>
             <li><a href="<?= base_url("raporlar/kasa-raporlari"); ?>" style="color:#000;">Kasa Raporları</a></li>
           </div>
-          
         </a>
       </div>
-	</div>
-	<div class="col-md-3 col-sm-4">
+    </div>
+    <div class="col-md-3 col-sm-4">
       <div class="wrimagecard wrimagecard-topimage">
           <a href="javascript:void(0);">
             <div class="wrimagecard-topimage_header" style="background-image: url('<?= env('BASE_URL'); ?>/assets/img/reports_image_2.jpg');">
@@ -152,11 +141,10 @@ a.wrimagecard:hover, .wrimagecard-topimage:hover {
             <hr>
             <li><a href="<?= base_url("raporlar/gider-raporlari"); ?>" style="color:#000;">Gider Raporları</a></li>
           </div>
-          
         </a>
       </div>
-	</div>
-	<div class="col-md-3 col-sm-4">
+    </div>
+    <div class="col-md-3 col-sm-4">
       <div class="wrimagecard wrimagecard-topimage">
           <a href="javascript:void(0);">
          <div class="wrimagecard-topimage_header" style="background-image: url('<?= env('BASE_URL'); ?>/assets/img/reports_image_3.jpg');">
@@ -170,9 +158,9 @@ a.wrimagecard:hover, .wrimagecard-topimage:hover {
           </div>
         </a>
       </div>
-	</div>
+    </div>
 </div>
-	<div class="row">
+<div class="row">
     <div class="col-md-3 col-sm-4">
       <div class="wrimagecard wrimagecard-topimage">
           <a href="javascript:void(0);">
@@ -183,101 +171,15 @@ a.wrimagecard:hover, .wrimagecard-topimage:hover {
             <h4><center>Senetler</center> 
             <div class="pull-right badge" id="WrControls"></div></h4>
             <hr>
-						<li><a href="<?= base_url("#"); ?>" style="color:#000;">Ödenen Senetler</a></li>
-						<li><a href="<?= base_url("#"); ?>" style="color:#000;">Ödenmeyen Senetler (Elden)</a></li>
-						<li><a href="<?= base_url("#"); ?>" style="color:#000;">Protesto Senetler (Banka)</a></li>
+            <li><a href="<?= base_url("#"); ?>" style="color:#000;">Ödenen Senetler</a></li>
+            <li><a href="<?= base_url("#"); ?>" style="color:#000;">Ödenmeyen Senetler (Elden)</a></li>
+            <li><a href="<?= base_url("#"); ?>" style="color:#000;">Protesto Senetler (Banka)</a></li>
           </div>
         </a>
       </div>
+    </div>
 </div>
-<!--test-->
-<?php }else{?>
-<?php if($yetkiSorgula1_rapor || $yetkiSorgula2_rapor || $yetkiSorgula3_rapor || $yetkiSorgula4_rapor || $yetkiSorgula5_rapor || $yetkiSorgula6_rapor || $yetkiSorgula7_rapor){ ?>
-<!--test-->
-	<div class="row">
-    <div class="col-md-3 col-sm-4">
-      <div class="wrimagecard wrimagecard-topimage">
-          <a href="javascript:void(0);">
-          <div class="wrimagecard-topimage_header" style="background-image: url('<?= env('BASE_URL'); ?>/assets/img/reports_image_1.jpg');">
-            <center><i class = "fa fa-cubes" style="color:#16A085;opacity: 0;"></i></center>
-          </div>
-          <div class="wrimagecard-topimage_title">
-            <h4><center>Stok</center>
-            <div class="pull-right badge" id="WrControls"></div></h4>
-            <hr>
-						<?php if($yetkiSorgula1_rapor){?>
-						<li><a href="<?= base_url("raporlar/stok-raporlari"); ?>" style="color:#000;">Stok Raporları</a></li>
-						<?php } ?>
-						<?php if($yetkiSorgula5_rapor){?>
-						<li><a href="<?= base_url("raporlar/kritik-stok-raporu"); ?>" style="color:#000;">Azalan Ürünler (Kritik Stok)</a></li>
-						<?php } ?>
-						<?php if($yetkiSorgula6_rapor){?>
-						<li><a href="<?= base_url("raporlar/biten-stoklar-raporu"); ?>" style="color:#000;">Biten Stoklar</a></li>
-						<?php } ?>
-						<?php if($yetkiSorgula7_rapor){?>
-						<li><a href="<?= base_url("raporlar/en-cok-satanlar-raporu"); ?>" style="color:#000;">En Çok Satanlar</a></li>
-						<?php } ?>
-						<?php if($yetkiSorgula3_rapor){?>
-						<li><a href="<?= base_url("raporlar/cari-stok-hareket-raporlari"); ?>" style="color:#000;">Cari Stok Hareket Raporları</a></li>
-						<?php } ?>
-          </div>
-        </a>
-      </div>
-</div>
-	<div class="col-md-3 col-sm-4">
-      <div class="wrimagecard wrimagecard-topimage">
-          <a href="javascript:void(0);">
-          <div class="wrimagecard-topimage_header" style="background-image: url('<?= env('BASE_URL'); ?>/assets/img/reports_image_4.jpg');">
-             <center><i class="fa fa-table" style="color:#3369e8;opacity: 0;"> </i></center>
-          </div>
-          <div class="wrimagecard-topimage_title">
-            <h4><center>Kasa</center>
-            <div class="pull-right badge" id="WrGridSystem"></div></h4>
-            <hr>
-            <?php if($yetkiSorgula2_rapor){?>
-						<li><a href="<?= base_url("raporlar/kasa-raporlari"); ?>" style="color:#000;">Kasa Raporları</a></li>
-						<?php } ?>
-          </div>
-          
-        </a>
-      </div>
-	</div>
-	<div class="col-md-3 col-sm-4">
-      <div class="wrimagecard wrimagecard-topimage">
-          <a href="javascript:void(0);">
-            <div class="wrimagecard-topimage_header" style="background-image: url('<?= env('BASE_URL'); ?>/assets/img/reports_image_2.jpg');">
-           <center><i class="fa fa-bars" style="color:#795a47;opacity: 0;"> </i></center> 
-          </div>
-          <div class="wrimagecard-topimage_title">
-            <h4><center>Giderler</center>
-            <div class="pull-right badge" id="WrNavigation"></div></h4>
-            <hr>
-            <?php if($yetkiSorgula4_rapor){?>
-						<li><a href="<?= base_url("raporlar/gider-raporlari"); ?>" style="color:#000;">Gider Raporları</a></li>
-						<?php } ?>
-          </div>
-          
-        </a>
-      </div>
-	</div>
-	<div class="col-md-3 col-sm-4">
-      <div class="wrimagecard wrimagecard-topimage">
-          <a href="javascript:void(0);">
-         <div class="wrimagecard-topimage_header" style="background-image: url('<?= env('BASE_URL'); ?>/assets/img/reports_image_3.jpg');">
-            <center><i class="fa fa-magic" style="color:#825d09;opacity: 0;"></i></center>
-          </div>
-          <div class="wrimagecard-topimage_title">
-            <h4><center>Cari</center>
-            <div class="pull-right badge" id="WrThemesIcons"></div></h4>
-            <hr>
-            <li><a href="<?= base_url("cari/cari-listesi"); ?>" style="color:#000;">Cari B/A Raporu</a></li>
-          </div>
-        </a>
-      </div>
-	</div>
-</div>
-<!--test-->
-<?php }}?>
+<?php } ?>
 				</div>
 			</div>
 			<!-- /Page Wrapper -->

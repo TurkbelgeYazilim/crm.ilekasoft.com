@@ -5,7 +5,6 @@
 	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css"
 		  integrity="sha512-vKMx8UnXk60zUwyUnUPM3HbQo8QfmNx7+ltw8Pm5zLusl1XIfwcxo8DbWCqMGKaWeNxWA8yrx5v3SaVpMvR3CA=="
 		  crossorigin="anonymous" referrerpolicy="no-referrer"/>
-
 	<style>
 		.ui-autocomplete {
 			z-index: 999999;
@@ -20,9 +19,16 @@
 		.form-group {
 			margin-bottom: 10px !important;
 		}
-
 		.card {
-		. margin-bottom: 0 px !important;
+			margin-bottom: 0px !important;
+		}
+		
+		/* Hide Stok Kodu (Stock Code) and Birim (Unit) columns */
+		#my_table th:nth-child(2), /* Stok Kodu header */
+		#my_table td:nth-child(2), /* Stok Kodu data cells */
+		#my_table th:nth-child(4), /* Birim header */
+		#my_table td:nth-child(4) { /* Birim data cells */
+			display: none !important;
 		}
 	</style>
 
@@ -173,10 +179,9 @@ $modulSorgula = modulSorgula($firma_ID, 1);
 										 id="faturaBilgisiDiv" <?php if (!$faturaDetay) echo "style='display:none;'"; ?>>
 										<div class="col-12">
 											<div class="row">
-												<div class="col-md-7">
-													<div class="col-md-12">
+												<div class="col-md-7">													<div class="col-md-12">
 														<div class="form-group row">
-															<label class="col-sm-3 text-sm-left pt-2">Fatura No</label>
+															<label class="col-sm-3 text-sm-left pt-2">Sözleşme No <span style="color: red;">*</span></label>
 															<div class="col-sm-9">
 																<input type="text" class="form-control"
 																	   name="alis_faturaNo"
@@ -185,8 +190,7 @@ $modulSorgula = modulSorgula($firma_ID, 1);
 															</div>
 
 														</div>
-													</div>
-													<div class="col-md-12">
+													</div><div class="col-md-12" style="display: none;">
 														<div class="form-group row">
 															<label class="col-sm-3 text-sm-left pt-2">Tip</label>
 															<div class="col-sm-9" id="alis_faturaTip_div">
@@ -289,9 +293,7 @@ $modulSorgula = modulSorgula($firma_ID, 1);
 																	   id="datetimepicker"/>
 															</div>
 														</div>
-													</div>
-
-													<div class="col-md-12">
+													</div>													<div class="col-md-12" style="display: none;">
 														<div class="form-group row">
 															<label class="col-sm-3 text-sm-left pt-2">Etiket</label>
 															<div class="col-sm-9">
@@ -315,11 +317,9 @@ $modulSorgula = modulSorgula($firma_ID, 1);
 										 id="checkboxDiv"<?php if (!$faturaDetay) echo "style='display:none;'"; ?>>
 										<div class="row pl-4">
 
-											<div class="col-md-4">
-
-												<input class="form-check-input" type="checkbox" value="1"
+											<div class="col-md-4">												<input class="form-check-input" type="checkbox" value="1"
 													   id="kdvCheck" onchange="kdvCheckFunc()"
-													   name="kdvCheck" style="width:30px;height:20px;">
+													   name="kdvCheck" style="width:30px;height:20px;" checked>
 												<label class="form-check-label ml-3" for="kdvCheck">
 													KDV Dahil
 												</label>
@@ -795,8 +795,7 @@ $modulSorgula = modulSorgula($firma_ID, 1);
 									<div class="row"
 										 id="faturaAltBilgisiDiv" <?php if (!$faturaDetay) echo "style='display:none;'"; ?>>
 										<div class="col-md-12">
-											<h4 class="card-title mt-4">Fatura Alt Bilgileri</h4>
-											<div class="row">
+											<h4 class="card-title mt-4">Fatura Alt Bilgileri</h4>											<div class="row">
 												<div class="col-md-12">
 													<div class="form-group">
 														<label>Açıklama</label>
@@ -806,6 +805,16 @@ $modulSorgula = modulSorgula($firma_ID, 1);
 												</div>
 
 											</div>
+											<!-- Dosya Yükleme Alanı -->
+											<div class="row">
+												<div class="col-md-12">
+													<div class="form-group">
+														<label>Satış sözleşmesini lütfen buraya yükleyiniz <span style="color: red;">*</span></label>
+														<input type="file" class="form-control" name="fatura_dosya[]" multiple accept="*/*" required>
+													</div>
+												</div>
+											</div>
+											<!-- /Dosya Yükleme Alanı -->
 											<div class="col-md-12 p-0">
 												<div class="row">
 													<div class="col-md-12">
@@ -1263,7 +1272,6 @@ $modulSorgula = modulSorgula($firma_ID, 1);
 			$("#birim" + id).css("background-color", "#e9ecef");
 		}
 	}
-
 	function addItem() {
 
 		items++;
@@ -1272,9 +1280,9 @@ $modulSorgula = modulSorgula($firma_ID, 1);
 		//html += "<td><a href='#' class='btn btn-success btn-sm' data-toggle='modal' data-target='#edit_category' data-id='" + items + "'><i class='fa fa-hand-pointer'></i> Seç</a>  </td>";
 
 		html += "<td><input type='text' class='form-control' name='stokadi[]' id='stokadi" + items + "' onblur='stokKontrol(this.id)' required></td>";
-		html += "<td><input type='text' class='form-control' name='stokkodu[]' id='stokkodu" + items + "' onblur='stokKontrol(this.id)' required></td>";
+		html += "<td style='display:none'><input type='text' class='form-control' name='stokkodu[]' id='stokkodu" + items + "' onblur='stokKontrol(this.id)' required></td>";
 		html += "<td><input type='hidden' name='stokid[]' id='stokid" + items + "'><input type='text' class='form-control' name='barkod[]' id='barkod" + items + "'  ></td>";
-		html += "<td><select class='form-control' name='birim[]' id='birim" + items + "'><?= $birimler ?></select></td>";
+		html += "<td style='display:none'><select class='form-control' name='birim[]' id='birim" + items + "'><?= $birimler ?></select></td>";
 		html += "<td><input type='number' step='0.1' class='form-control' autocomplete='off' name='miktar[]' id='miktar" + items + "' required='' style='width:175px;' ></td>";
 		html += "<td><input type='number' step='0.1' class='form-control' autocomplete='off' name='birimfiyat[]' id='birimfiyat" + items + "' required='' ></td>";
 		/*html += "<td><input type='text' class='form-control' name='kdv[]' id='kdv"+items+"' readonly></td>";*/

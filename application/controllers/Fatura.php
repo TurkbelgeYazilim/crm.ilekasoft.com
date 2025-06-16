@@ -509,6 +509,54 @@ class Fatura extends CI_Controller
 		die;
 	}
 
+	// DEBUG: Test fonksiyonu - kullanıcı bilgilerini kontrol etmek için
+	public function debugUserInfo($user_id = null)
+	{
+		if (!$user_id) {
+			echo "Kullanım: /fatura/debugUserInfo/[user_id]";
+			return;
+		}
+		
+		// Kullanıcı bilgilerini çek
+		$sorgu = "SELECT kullanici_id, kullanici_ad, kullanici_sorumluMudur FROM kullanicilar WHERE kullanici_id = '$user_id'";
+		$result = $this->db->query($sorgu)->row();
+		
+		if (!$result) {
+			echo "Kullanıcı bulunamadı: $user_id";
+			return;
+		}
+		
+		echo "<h3>Kullanıcı $user_id Bilgileri:</h3>";
+		echo "Ad: " . $result->kullanici_ad . "<br>";
+		echo "Sorumlu Müdür: " . ($result->kullanici_sorumluMudur ? $result->kullanici_sorumluMudur : 'Yok') . "<br>";
+		
+		// Ana hesap hesaplama
+		$anaHesap = ($result->kullanici_sorumluMudur && $result->kullanici_sorumluMudur != 0) ? 
+					$result->kullanici_sorumluMudur : $result->kullanici_id;
+		echo "Ana Hesap: $anaHesap<br><br>";
+				// Ana hesap kontrolü kaldırıldı - artık tüm kullanıcılar tüm stoklara erişebilir
+		echo "<strong>NOT: Ana hesap kontrolü devre dışı bırakıldı - tüm kullanıcılar tüm stoklara erişebilir</strong><br><br>";
+		
+		// Sistemdeki toplam aktif stok sayısı (tüm hesaplar)
+		$stok_sorgu = "SELECT COUNT(*) as toplam FROM stok WHERE stok_durum = 1";
+		$stok_result = $this->db->query($stok_sorgu)->row();
+		echo "Sistemdeki toplam aktif stok sayısı (tüm kullanıcılar için erişilebilir): " . $stok_result->toplam . "<br>";
+		
+		// DIGITURK stokları var mı? (tüm hesaplar)
+		$digiturk_sorgu = "SELECT COUNT(*) as toplam FROM stok WHERE stok_durum = 1 AND stok_ad LIKE '%DIGITURK%'";
+		$digiturk_result = $this->db->query($digiturk_sorgu)->row();
+		echo "Sistemdeki DIGITURK stok sayısı (tüm kullanıcılar için erişilebilir): " . $digiturk_result->toplam . "<br><br>";
+		
+		// Örnek stoklardan birkaçını listele (tüm hesaplar)
+		$ornek_sorgu = "SELECT stok_id, stok_ad FROM stok WHERE stok_durum = 1 LIMIT 10";
+		$ornek_result = $this->db->query($ornek_sorgu)->result();
+		
+		echo "<h4>Örnek Stoklar (Tüm Kullanıcılar İçin Erişilebilir):</h4>";
+		foreach ($ornek_result as $stok) {
+			echo "- " . $stok->stok_ad . " (ID: " . $stok->stok_id . ")<br>";
+		}
+	}
+
 	public function autocompleteDataByTcknVknEarsiv()
 	{
 
@@ -664,15 +712,24 @@ class Fatura extends CI_Controller
 		}
 		echo json_encode($returnData);
 		die;
-	}
-
-	public function autocompleteDataByStockName()
+	}	public function autocompleteDataByStockName()
 	{
 		$anaHesap = anaHesapBilgisi();
+		
+		// DEBUG: Log ana hesap bilgisini yazdır
+		error_log("AUTOCOMPLETE DEBUG - Ana hesap kontrolü devre dışı - tüm stoklar erişilebilir");
+		error_log("AUTOCOMPLETE DEBUG - Original anaHesap would be: " . ($anaHesap ? $anaHesap : 'NULL'));
 
 		$returnData = array();
 		$conditions['searchTerm'] = $this->input->get('term');
+		
+		// DEBUG: Log arama terimini yazdır
+		error_log("AUTOCOMPLETE DEBUG - searchTerm: " . $conditions['searchTerm']);
+		
 		$getData = $this->vt->getRows4($conditions, $anaHesap);
+		
+		// DEBUG: Log sonuç sayısını yazdır
+		error_log("AUTOCOMPLETE DEBUG - Results count: " . count($getData));
 
 		if (!empty($getData)) {
 			foreach ($getData as $row) {
@@ -853,9 +910,41 @@ class Fatura extends CI_Controller
 			$this->session->set_flashdata('fatura_mukerrer', 'OK');
 			redirect($_SERVER['HTTP_REFERER']);
 		}
-
 		$this->vt->insert("satisFaturasi", $data);
 		$satis_id = $this->db->insert_id();
+
+		// Handle file uploads for sales contracts
+		$uploaded_files = [];
+		if (!empty($_FILES['fatura_dosya']['name'][0])) {
+			$upload_path = 'assets/uploads/satis_sozlesmeleri/';
+			
+			// Create directory if it doesn't exist
+			if (!is_dir($upload_path)) {
+				mkdir($upload_path, 0755, true);
+			}
+			
+			for ($i = 0; $i < count($_FILES['fatura_dosya']['name']); $i++) {
+				if (!empty($_FILES['fatura_dosya']['name'][$i])) {
+					$file_name = $_FILES['fatura_dosya']['name'][$i];
+					$file_tmp = $_FILES['fatura_dosya']['tmp_name'][$i];
+					$file_ext = pathinfo($file_name, PATHINFO_EXTENSION);
+					
+					// Generate unique filename
+					$new_filename = $satis_id . '_' . time() . '_' . $i . '.' . $file_ext;
+					$full_path = $upload_path . $new_filename;
+					
+					if (move_uploaded_file($file_tmp, $full_path)) {
+						$uploaded_files[] = $full_path;
+					}
+				}
+			}
+			
+			// Save file paths to database
+			if (!empty($uploaded_files)) {
+				$file_paths = implode(',', $uploaded_files);
+				$this->vt->update('satisFaturasi', array('satis_id' => $satis_id), array('satis_dosya' => $file_paths));
+			}
+		}
 
 		if ($satis_InvoiceType == 3){ //eirsaliye ise gerekli kayıt işlemleri yapmak
 			$datairs["irs_faturaID"] = $satis_id;
@@ -1255,9 +1344,47 @@ class Fatura extends CI_Controller
 			$this->session->set_flashdata('fatura_mukerrer', 'OK');
 			redirect($_SERVER['HTTP_REFERER']);
 		}
-*/
-		//if ($faturaVarmiExe)
+*/		//if ($faturaVarmiExe)
 			$this->vt->update('satisFaturasi', array('satis_id' => $satis_id), $data);
+
+		// Handle file uploads for sales contracts
+		$uploaded_files = [];
+		if (!empty($_FILES['fatura_dosya']['name'][0])) {
+			$upload_path = 'assets/uploads/satis_sozlesmeleri/';
+			
+			// Create directory if it doesn't exist
+			if (!is_dir($upload_path)) {
+				mkdir($upload_path, 0755, true);
+			}
+			
+			// Get existing files from database
+			$existing_files_query = "SELECT satis_dosya FROM satisFaturasi WHERE satis_id = $satis_id";
+			$existing_files_result = $this->db->query($existing_files_query)->row();
+			$existing_files = !empty($existing_files_result->satis_dosya) ? explode(',', $existing_files_result->satis_dosya) : [];
+			
+			for ($i = 0; $i < count($_FILES['fatura_dosya']['name']); $i++) {
+				if (!empty($_FILES['fatura_dosya']['name'][$i])) {
+					$file_name = $_FILES['fatura_dosya']['name'][$i];
+					$file_tmp = $_FILES['fatura_dosya']['tmp_name'][$i];
+					$file_ext = pathinfo($file_name, PATHINFO_EXTENSION);
+					
+					// Generate unique filename
+					$new_filename = $satis_id . '_' . time() . '_' . $i . '.' . $file_ext;
+					$full_path = $upload_path . $new_filename;
+					
+					if (move_uploaded_file($file_tmp, $full_path)) {
+						$uploaded_files[] = $full_path;
+					}
+				}
+			}
+			
+			// Merge with existing files and save to database
+			if (!empty($uploaded_files)) {
+				$all_files = array_merge($existing_files, $uploaded_files);
+				$file_paths = implode(',', array_filter($all_files)); // Remove empty values
+				$this->vt->update('satisFaturasi', array('satis_id' => $satis_id), array('satis_dosya' => $file_paths));
+			}
+		}
 
 		//iade
 		$iade_count = postval("iade_count");
@@ -1510,12 +1637,15 @@ class Fatura extends CI_Controller
 		logekle(11, 3);
 		redirect($_SERVER['HTTP_REFERER']);
 	}
-
 	public function satisFaturasiListesi()
 	{
 		$data["baslik"] = "Fatura / Satış Sözleşmesi Listesi";
 
 		$anaHesap = anaHesapBilgisi();
+		
+		// Get logged in user ID to filter only their sales invoices
+		$control2 = session("r", "login_info");
+		$logged_in_user_id = $control2->kullanici_id;
 
 		$faturaNo = $this->input->get('faturaNo');
 		//$irsaliyeNo = $this->input->get('irsaliyeNo');
@@ -1582,17 +1712,16 @@ class Fatura extends CI_Controller
 	            $sorgu3 = "AND month(satis_faturaTarihi) = '$ayArama'";
 	        }else $sorgu3="";
 	        
-	        
-			$countq = "SELECT COUNT(*) as total FROM satisFaturasi WHERE satis_InvoiceType IS NULL AND satis_olusturanAnaHesap = '$anaHesap' AND satis_faturaNo LIKE '%$faturaNo%' " . $sorgu2 . " " . $sorgu1 . " ".$sorgu3." ";
+	       			$countq = "SELECT COUNT(*) as total FROM satisFaturasi WHERE satis_InvoiceType IS NULL AND satis_olusturanAnaHesap = '$anaHesap' AND satis_olusturan = '$logged_in_user_id' AND satis_faturaNo LIKE '%$faturaNo%' " . $sorgu2 . " " . $sorgu1 . " ".$sorgu3." ";
 			$countexe = $this->db->query($countq)->row();
 			$count = $countexe->total;
 
-			$sorgu = "SELECT * FROM satisFaturasi WHERE satis_InvoiceType IS NULL AND satis_olusturanAnaHesap = '$anaHesap' AND satis_faturaNo LIKE '%$faturaNo%' " . $sorgu2 . " " . $sorgu1 ." ". $sorgu3 ." " . $sira . " LIMIT $pagem,$limit";
+			$sorgu = "SELECT * FROM satisFaturasi WHERE satis_InvoiceType IS NULL AND satis_olusturanAnaHesap = '$anaHesap' AND satis_olusturan = '$logged_in_user_id' AND satis_faturaNo LIKE '%$faturaNo%' " . $sorgu2 . " " . $sorgu1 ." ". $sorgu3 ." " . $sira . " LIMIT $pagem,$limit";
 		} else {
-			$countq = "SELECT COUNT(*) as total FROM satisFaturasi WHERE  satis_InvoiceType IS NULL AND satis_olusturanAnaHesap = '$anaHesap'";
+			$countq = "SELECT COUNT(*) as total FROM satisFaturasi WHERE  satis_InvoiceType IS NULL AND satis_olusturanAnaHesap = '$anaHesap' AND satis_olusturan = '$logged_in_user_id'";
 			$countexe = $this->db->query($countq)->row();
 			$count = $countexe->total;
-			$sorgu = "SELECT * FROM satisFaturasi WHERE  satis_InvoiceType IS NULL AND satis_olusturanAnaHesap = '$anaHesap' ORDER BY satis_id DESC LIMIT $pagem,$limit";
+			$sorgu = "SELECT * FROM satisFaturasi WHERE  satis_InvoiceType IS NULL AND satis_olusturanAnaHesap = '$anaHesap' AND satis_olusturan = '$logged_in_user_id' ORDER BY satis_id DESC LIMIT $pagem,$limit";
 		}
 
 		$data["count_of_list"] = $count;
@@ -5505,9 +5634,67 @@ class Fatura extends CI_Controller
 
 		$dataProforma["proforma_faturaEtiketID"]=0;
 		$this->vt->update('proformaFaturasi', array('proforma_faturaEtiketID' => $id,'proforma_olusturanAnaHesap'=>$anaHesap), $dataProforma);
-
 		$this->vt->del('etiketler', 'etiket_id' , $id);
 		$this->session->set_flashdata('etiket_silme_basarili', 'OK');
 		redirect("fatura/etiketler");
+	}
+	public function deleteSalesContractFile()
+	{
+		$control2 = session("r", "login_info");
+		$u_id = $control2->kullanici_id;
+		$anaHesap = anaHesapBilgisi();
+
+		$satis_id = $this->input->post('satis_id');
+		$file_name = $this->input->post('file_name'); // Now accepting file_name from frontend
+		
+		if (empty($satis_id) || empty($file_name)) {
+			echo json_encode(['success' => false, 'message' => 'Gerekli parametreler eksik.']);
+			return;
+		}
+
+		// Verify that the invoice belongs to the current user/account
+		$faturaQ = "SELECT satis_id, satis_dosya FROM satisFaturasi WHERE satis_id = ? AND satis_olusturanAnaHesap = ?";
+		$faturaExe = $this->db->query($faturaQ, [$satis_id, $anaHesap])->row();
+
+		if (!$faturaExe) {
+			echo json_encode(['success' => false, 'message' => 'Fatura bulunamadı veya erişim yetkisi yok.']);
+			return;
+		}
+
+		// Get current files from database
+		$current_files = !empty($faturaExe->satis_dosya) ? explode(',', $faturaExe->satis_dosya) : [];
+		
+		// Find and remove the file from the array (match by filename)
+		$file_to_delete = null;
+		$updated_files = [];
+		
+		foreach ($current_files as $file_path) {
+			$file_path = trim($file_path);
+			if (basename($file_path) === $file_name) {
+				$file_to_delete = $file_path;
+			} else if (!empty($file_path)) {
+				$updated_files[] = $file_path;
+			}
+		}
+
+		if (!$file_to_delete) {
+			echo json_encode(['success' => false, 'message' => 'Dosya bulunamadı.']);
+			return;
+		}
+
+		// Delete physical file if it exists
+		if (file_exists($file_to_delete)) {
+			unlink($file_to_delete);
+		}
+
+		// Update database with remaining files
+		$new_file_list = implode(',', $updated_files);
+		$update_data = ['satis_dosya' => $new_file_list];
+		
+		if ($this->vt->update('satisFaturasi', array('satis_id' => $satis_id), $update_data)) {
+			echo json_encode(['success' => true, 'message' => 'Dosya başarıyla silindi.']);
+		} else {
+			echo json_encode(['success' => false, 'message' => 'Dosya silinirken bir hata oluştu.']);
+		}
 	}
 }

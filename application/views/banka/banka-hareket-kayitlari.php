@@ -166,6 +166,8 @@
 															$turuTxt = '<span class="badge bg-warning text-light">Bankadan Kasaya Transfer</span>';
 														}else if($turu == 13){
 															$turuTxt = '<span class="badge bg-warning text-light">Kasadan Bankaya Transfer</span>';
+														}else if($turu == 15){
+															$turuTxt = '<span class="badge bg-primary text-light">POS Gelirleri</span>';
 														}
 
 														if($bh->bh_giris){
@@ -354,7 +356,7 @@ swal({
 			<script>
 				swal({
 					title: "Bilgilendirme",
-					type: "success",
+				 type: "success",
 					text: "Banka EFT başarılı bir şekilde silindi.",
 					confirmButtonText:'Tamam',
 					button: false,

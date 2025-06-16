@@ -2,10 +2,16 @@
 <html lang="tr">
 
 <head>
-	<?php $this->load->view("include/head-tags"); ?>
-	<style>
+	<?php $this->load->view("include/head-tags"); ?>	<style>
 	.btn.text-danger, .btn.btn-white.text-danger, .btn.btn-danger, .btn-danger {
 		color: #fff !important;
+	}
+	
+	/* Mobilde Önceki Sayfa butonunu gizle */
+	@media (max-width: 767.98px) {
+		.col-sm-2 {
+			display: none !important;
+		}
 	}
 	</style>
 </head>
@@ -36,13 +42,13 @@
 			<div class="page-header">
 				<div class="row">
 					<div class="col-sm-10">
-						<h3 class="page-title">Cari</h3>
+						<h3 class="page-title">Müşteri Listesi</h3>
 						<ul class="breadcrumb">
 							<li class="breadcrumb-item"><a href="<?= base_url(); ?>">Anasayfa</a>
 							</li>
-							<li class="breadcrumb-item">Cari
+							<li class="breadcrumb-item">Müşteri
 							</li>
-							<li class="breadcrumb-item active">Cari Listesi</li>
+							<li class="breadcrumb-item active">Müşteri Listesi</li>
 						</ul>
 					</div>
 					<div class="d-flex justify-content-end text-align-center col-sm-2">
@@ -64,7 +70,7 @@
 						<div class="card-header">
 							<div class="row">
 								<div class="col">
-									<h5 class="card-title">Cari Listesi</h5>
+									<h5 class="card-title">Müşteri Listesi</h5>
 								</div>
 								<div class="col-auto">
 									<a href="<?= base_url("cari/cariListesiExcel$qs"); ?>"

@@ -193,14 +193,40 @@ class Vt extends CI_Model{
             $result = ($query->num_rows() > 0)?$query->result_array():FALSE;
         }
         return $result;
-    }
-    
-    public function getRows4($params = array(), $anaHesap){
+    }      public function getRows4($params = array(), $anaHesap = null){
         $this->db->select("*");
         $this->db->from("stok");
-        $this->db->where("stok_olusturanAnaHesap", $anaHesap);
+        // Ana hesap kontrolü kaldırıldı - tüm kullanıcılar tüm stoklara erişebilir
+        // $this->db->where("stok_olusturanAnaHesap", $anaHesap);
 		$this->db->where("stok_durum", 1);
+		
+		// DEBUG: Log sorgu parametrelerini yazdır
+		error_log("GETROWS4 DEBUG - Ana hesap kontrolü devre dışı (tüm stoklar erişilebilir)");
+		error_log("GETROWS4 DEBUG - searchTerm: " . (isset($params['searchTerm']) ? $params['searchTerm'] : 'NULL'));
 
+        if(array_key_exists("conditions",$params)){
+            foreach ($params['conditions'] as $key => $value) {
+                $this->db->where($key,$value);
+            }
+        }
+        
+        if(!empty($params['searchTerm'])){
+            $this->db->like('stok_ad', $params['searchTerm']);
+        }
+        
+        $this->db->order_by('stok_ad', 'asc');
+        
+        // DEBUG: SQL sorgusunu log'a yazdır
+        $compiled_query = $this->db->get_compiled_select();
+        error_log("GETROWS4 DEBUG - SQL Query: " . $compiled_query);
+        
+        // Query'yi tekrar oluştur çünkü get_compiled_select() query'yi consume eder
+        $this->db->select("*");
+        $this->db->from("stok");
+        // Ana hesap kontrolü kaldırıldı
+        // $this->db->where("stok_olusturanAnaHesap", $anaHesap);
+		$this->db->where("stok_durum", 1);
+        
         if(array_key_exists("conditions",$params)){
             foreach ($params['conditions'] as $key => $value) {
                 $this->db->where($key,$value);
@@ -221,6 +247,14 @@ class Vt extends CI_Model{
             $query = $this->db->get();
             $result = ($query->num_rows() > 0)?$query->result_array():FALSE;
         }
+        
+        // DEBUG: Sonuç sayısını log'a yazdır
+        if($result) {
+            error_log("GETROWS4 DEBUG - Result count: " . count($result));
+        } else {
+            error_log("GETROWS4 DEBUG - No results found");
+        }
+        
         return $result;
     }
 

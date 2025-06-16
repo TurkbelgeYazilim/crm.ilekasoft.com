@@ -2,6 +2,14 @@
 <html lang="tr">
 <head>
 	<?php $this->load->view("include/head-tags"); ?>
+	<style>
+		/* Mobilde Önceki Sayfa butonunu gizle */
+		@media (max-width: 767.98px) {
+			.col-sm-2 {
+				display: none !important;
+			}
+		}
+	</style>
 </head>
 <body>
 

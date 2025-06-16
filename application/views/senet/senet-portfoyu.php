@@ -29,7 +29,7 @@
 					<div class="page-header">
 						<div class="row">
 							<div class="col-sm-10">
-								<h3 class="page-title">Çek</h3>
+								<h3 class="page-title">Senet</h3>
 								<ul class="breadcrumb">
 									<li class="breadcrumb-item"><a href="<?= base_url(); ?>">Anasayfa</a>
 									</li>

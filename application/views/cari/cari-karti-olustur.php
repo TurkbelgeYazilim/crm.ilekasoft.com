@@ -36,16 +36,16 @@ $modulSorgula = modulSorgula($firma_ID, 1);
 	<div class="page-wrapper">
 		<div class="content container-fluid">
 
-			<!-- Page Header -->
+			<!-- Page Header -->Müşteri Listesi
 			<div class="page-header">
 				<div class="row">
 
 					<div class="col-sm-10">
-						<h3 class="page-title">Cari</h3>
+						<h3 class="page-title">Müşteri Oluştur</h3>
 						<ul class="breadcrumb">
 							<li class="breadcrumb-item"><a href="<?= base_url(); ?>">Anasayfa</a></li>
-							<li class="breadcrumb-item">Cari</li>
-							<li class="breadcrumb-item active">Cari Kartı</li>
+							<li class="breadcrumb-item">Müşteri</li>
+							<li class="breadcrumb-item active">Müşteri Oluştur</li>
 						</ul>
 					</div>
 					<div class="d-flex justify-content-end text-align-center col-sm-2">
@@ -54,77 +54,83 @@ $modulSorgula = modulSorgula($firma_ID, 1);
 					</div>
 				</div>
 			</div>
-			<!-- /Page Header -->
-
-			<?php
+			<!-- /Page Header -->			<?php
 			$anaHesap = anaHesapBilgisi();
 			$cariGruplariQ = "SELECT * FROM cariGruplari WHERE cariGrup_olusturanAnaHesap = '$anaHesap'";
 			$cariGruplari = $this->db->query($cariGruplariQ)->result();
+			
+			// Edit modu kontrolü
+			$isEditMode = isset($cari) && !empty($cari);
+			$pageTitle = $isEditMode ? "Cari Kartı Düzenle" : "Cari Kartı";
+			$formAction = $isEditMode ? base_url("cari/mevcutCariKartiDuzenle") : base_url("cari/yeniCariKartiOlustur");
+			
+			// Edit modunda cari vergi numarası belirleme
+			if($isEditMode) {
+				if($cari->cari_vergiNumarasi != null)
+					$cari_vergiNumarasi = $cari->cari_vergiNumarasi;
+				else
+					$cari_vergiNumarasi = $cari->cari_tckn;
+				
+				// Bireysel müşteri kontrolü
+				$bireysel = $cari->cari_bireysel;
+			}
 			?>
 
 			<div class="row">
 				<div class="col-md-12">
 					<div class="card">
-						<div class="card-body">
-							<h4 class="card-title">Temel Cari Bilgileri<span style="float:right;display:none;"
-																			 id="mukellef_mark">e-Fatura Mükellefidir <i
+						<div class="card-body">							<h4 class="card-title">Temel Bilgiler<span style="float:right;<?php if($isEditMode && $cari->cari_alias_pk){echo "display:block;";}else{echo "display:none;";} ?>" id="mukellef_mark">e-Fatura Mükellefidir <i
 											class="fa fa-check-circle text-success"></i></span></h4>
-							<form action="<?= base_url("cari/yeniCariKartiOlustur"); ?>" method="POST" id="myForm" enctype="multipart/form-data">
-								<div class="row">
+							<form action="<?= $formAction ?>" method="POST" id="myForm" enctype="multipart/form-data">
+								<?php if($isEditMode): ?>
+									<input type="hidden" value="<?= $cari->cari_id ?>" name="cari_id">
+								<?php endif; ?>								<div class="row">
 									<div class="form-group col-md-12">
-										<label>Cari Tipi</label>
+										<label>Cari Tipi <span style="color: red;">*</span></label>
 										<select class="select" name="cari_bireysel" required="" id="cariBireysel">
 											<option value="">Seçiniz...</option>
-											<option value="1">Bireysel Müşteri</option>
-											<option value="0" selected>Kurumsal Müşteri</option>
-											<option value="2">Diğer</option>
+											<option value="1" <?php if($isEditMode && $bireysel == 1){echo "selected";} ?>>Bireysel Müşteri</option>
+											<option value="0" <?php if($isEditMode && $bireysel != 1){echo "selected";}elseif(!$isEditMode){echo "selected";} ?>>Kurumsal Müşteri</option>
+											<option value="2" <?php if($isEditMode && $bireysel == 2){echo "selected";} ?>>Diğer</option>
 										</select>
 
-										<input type="hidden" name="cari_alias_pk" id="alias_pk">
+										<input type="hidden" name="cari_alias_pk" id="alias_pk" value="<?= $isEditMode ? $cari->cari_alias_pk : '' ?>">
 									</div>
-								</div>
-								<div class="row" style="display: none;" id="cari_input">
-									<div class="row p-3">
-										<div class="col-md-4">
+								</div><div class="row" style="display: <?= $isEditMode ? 'block' : 'none' ?>;" id="cari_input">
+									<div class="row p-3">										<div class="col-md-6">
 											<div class="form-group">
-												<label>TC Kimlik Numarası / Vergi Numarası</label>
+												<label>TC Kimlik Numarası / Vergi Numarası <span style="color: red;">*</span></label>
 												<input type="number" class="form-control" required
 													   name="cari_vergiNumarasi"
 													   oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);"
-													   maxlength="11" id="vergiNumarasi" autocomplete="off"><img
+													   maxlength="11" id="vergiNumarasi" autocomplete="off" 
+													   value="<?= $isEditMode ? $cari_vergiNumarasi : '' ?>"
+													   <?php if($isEditMode && $bireysel == 2) echo "readonly";?>><img
 														src="/assets/img/Eclipse-1s-200px.gif"
 														style="position: absolute; right:15px; bottom: 113px; width:40px; display:none;"
 														id="loading-image"/>
 											</div>
 											<div class="form-group">
-												<label>Vergi Dairesi</label>
+												<label>Vergi Dairesi <span style="color: red;">*</span></label>
 												<input type="text" class="form-control" name="cari_vergiDairesi"
-													   id="vergiDairesi" autocomplete="off" required="">
-											</div>
-										</div>
-
-										<div class="col-md-4">
-											<div class="form-group">
-												<label>Cari Kodu</label>
-												<input type="text" class="form-control" name="cari_kodu" id="cari_kodu"
-													   required=""
-													   autocomplete="off" required>
+													   id="vergiDairesi" autocomplete="off" required=""
+													   value="<?= $isEditMode ? $cari->cari_vergiDairesi : '' ?>">
 											</div>
 											<div class="form-group">
-												<label>Cari Adı</label>
+												<label>Cari Adı <span style="color: red;">*</span></label>
 												<input type="text" class="form-control" name="cari_ad" required
-													   autocomplete="off" id="cariAd">
+													   autocomplete="off" id="cariAd"
+													   value="<?= $isEditMode ? $cari->cari_ad : '' ?>">
 											</div>
 										</div>
 
-
-										<div class="col-md-4">
+										<div class="col-md-6">
 											<div class="form-group">
 												<label>Cari Grup</label>
 												<select class="select" name="cari_cariGrupKoduID" id="cariGrupKodu">
 													<option value="0">Seçiniz...</option>
 													<?php foreach ($cariGruplari as $cg) { ?>
-														<option value="<?= $cg->cariGrup_id ?>" <?= $cg->cariGrup_id == 1 ? 'selected' : '' ?>><?= $cg->cariGrup_kodu; ?>
+														<option value="<?= $cg->cariGrup_id ?>" <?php if($isEditMode && $cg->cariGrup_id == $cari->cari_cariGrupKoduID){echo "selected";}elseif(!$isEditMode && $cg->cariGrup_id == 1){echo "selected";} ?>><?= $cg->cariGrup_kodu; ?>
 															(<?= $cg->cariGrup_ad; ?>)
 														</option>
 													<?php } ?>
@@ -132,132 +138,69 @@ $modulSorgula = modulSorgula($firma_ID, 1);
 											</div>
 											<div class="form-group">
 												<label>Yetkili Adı</label>
-												<input type="text" class="form-control" name="yetki_adi" id="yetkiAdi">
+												<input type="text" class="form-control" name="yetki_adi" id="yetkiAdi"
+													   value="<?= $isEditMode ? $cari->yetki_adi : '' ?>">
+											</div>											<div class="form-group" id="c_soyad" <?php if($isEditMode && $cari->cari_soyad==null) echo 'style="display: none;"';?>>
+												<label>Cari Soyadı <span style="color: red;">*</span></label>
+												<input type="text" class="form-control" name="cari_soyad" id="cariSoyad" 
+													   value="<?= $isEditMode ? $cari->cari_soyad : '' ?>" autocomplete="off">
 											</div>
 										</div>
 									</div>
-								</div>
-
-								<!--
-										<hr class="mt-4">
-										<div class="row">
-											<div class="col-md-4>
-
-												<input type="hidden" name="cari_alias_pk" id="alias_pk">
-
-												<div class="form-group">
-													<label>Cari Adı</label>
-													<input type="text" class="form-control" name="cari_ad" required="" autocomplete="off" id="cariAd">
-												</div>
-
-												 <div class="form-group" id="c_vkn">
-													<label>Vergi Numarası</label>
-													<input type="number" class="form-control" name="cari_vergiNumarasi"  oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);" maxlength="11" id="vergiNumarasi" disabled autocomplete="off"><img src="/assets/img/Eclipse-1s-200px.gif" style="position: absolute; right:15px; bottom:20px; width:40px; display:none;" id="loading-image"/>
-												</div>
-
-
-												<div class="form-group" style="display:none;" id="c_soyad">
-													<label>Cari Soyadı</label>
-													<input type="text" class="form-control" name="cari_soyad" id="cariSoyad" autocomplete="off">
-												</div>
-
-											</div>
-											<div class="col-md-4">
-												<div class="form-group">
-													<label>Cari Kodu</label>
-													<input type="text" class="form-control" name="cari_kodu" required="" autocomplete="off">
-												</div>
-												<div class="form-group" id="c_vd">
-													<label>Vergi Dairesi</label>
-													<input type="text" class="form-control" name="cari_vergiDairesi" id="vergiDairesi" disabled autocomplete="off">
-												</div>
-												<div class="form-group" style="display:none;" id="c_tckn">
-													<label>TC Kimlik Numarası</label>
-													<input type="number" class="form-control" name="cari_tckn" oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);" maxlength="11" id="tckn" autocomplete="off">
-												</div>
-											</div>
-											<div class="col-md-4">
-												<div class="form-group">
-													<label>Cari Tipi</label>
-													<select class="select" name="cari_bireysel" required="" id="cariBireysel">
-														<option value="">Seçiniz...</option>
-															<option value="1">Bireysel Müşteri</option>
-															<option value="0">Kurumsal Müşteri</option>
-															<option value="2">Diğer</option>
-													</select>
-												</div>
-
-												<div class="form-group">
-													<label>Cari Grup</label>
-													<select class="select" name="cari_cariGrupKoduID" id="cariGrupKodu">
-														<option value="">Seçiniz...</option>
-														<?php foreach ($cariGruplari as $cg) { ?>
-															<option value="<?= $cg->cariGrup_id ?>"><?= $cg->cariGrup_kodu; ?> (<?= $cg->cariGrup_ad; ?>)</option>
-														<?php } ?>
-													</select>
-												</div>
-
-												!-- <div class="form-group">
-													<label>TC Kimlik Numarası</label>
-													<input type="number" class="form-control" name="cari_tckn" oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);" maxlength="11" id="tckn" disabled>
-												</div>--
-
-											</div>
-
-										</div>
--->
-								<h4 class="card-title mt-4">Cari İletişim Bilgileri</h4>
+								</div>								<h4 class="card-title mt-4">Müşteri İletişim Bilgileri</h4>
 								<div class="row">
 									<div class="col-md-6">
 
-										<?php
-										if ($_iller != false):
+										<?php										if ($_iller != false):
 											echo '<div class="form-group">
-												<label>İl</label>
+												<label>İl <span style="color: red;">*</span></label>
 												<select id="il" name="cari_il" data-plugin-selectTwo class="select ajaxIller" required>
 												<option value="">Seçiniz</option>';
 											foreach ($_iller as $item) {
-												echo '<option value="' . $item->id . '">' . $item->il . '</option>';
+												$selected = ($isEditMode && $cari->cari_il == $item->id) ? 'selected' : '';
+												echo '<option value="' . $item->id . '" ' . $selected . '>' . $item->il . '</option>';
 											}
 											echo '</select></div>';
 										else:
 											echo 'Kayıtlı İl Bulunamadı..!';
 										endif;
-										?>
-
-
-										<div class="form-group">
+										?>										<div class="form-group">
 											<label>Instagram Hesabı</label>
 											<input type="text" class="form-control" name="cari_websitesi"
-												   autocomplete="off">
+												   autocomplete="off" value="<?= $isEditMode ? $cari->cari_websitesi : '' ?>">
 										</div>
 
 										<div class="form-group">
-											<label>Firma e-Posta</label>
+											<label>Mahalle</label>
+											<input type="text" class="form-control" name="cari_mahalle"
+												   autocomplete="off" placeholder="Mahalle bilgisi giriniz..."
+												   value="<?= $isEditMode ? $cari->cari_mahalle : '' ?>">
+										</div><div class="form-group">
+											<label>Firma e-Posta <?php if($modulSorgula) echo '<span style="color: red;">*</span>';?></label>
 											<input type="email" class="form-control" name="cari_firmaEPosta"
-												   autocomplete="off" <?php if($modulSorgula) echo "required";?> id="cari_eposta">
-										</div>
-
-										<div class="form-group">
-											<label>Firma Telefon</label>
+												   autocomplete="off" <?php if($modulSorgula) echo "required";?> id="cari_eposta"
+												   value="<?= $isEditMode ? $cari->cari_firmaEPosta : '' ?>">
+										</div>										<div class="form-group">
+											<label>Firma Telefon <?php if($modulSorgula) echo '<span style="color: red;">*</span>';?></label>
 											<input type="text" class="form-control" name="cari_firmaTelefon"
 												   autocomplete="off"
 												   oninput="javascript: if (this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);"
-												   maxlength="10"  <?php if($modulSorgula) echo "required";?>>
-										</div>
-										<!-- Fotoğraflar Yükleme Alanı -->
+												   maxlength="10"  <?php if($modulSorgula) echo "required";?>
+												   value="<?= $isEditMode ? $cari->cari_firmaTelefon : '' ?>">
+										</div>										<!-- Fotoğraflar Yükleme Alanı -->
 										<div class="form-group">
-											<label>İşletmeye ait en az 3 fotoğraf yükleyiniz</label>
-											<input type="file" class="form-control" name="cari_fotograflar[]" multiple accept="image/*">
+											<label>İşletmeye ait en az 3 fotoğraf yükleyiniz <span style="color: red;">*</span></label>
+											<input type="file" class="form-control" name="cari_fotograflar[]" multiple accept="image/*" required>
 										</div>
 										<!-- /Fotoğraflar Yükleme Alanı -->
-									</div>
-									<div class="col-md-6">
-										<div class="ilceler">
+									</div>									<div class="col-md-6">										<div class="ilceler">
 											<div class="form-group">
-												<label>İlçe</label>
+												<label>İlçe <span style="color: red;">*</span></label>
 												<select id="ilce" name="cari_ilce" class="select" required>
 													<option value="">İl Seçiniz</option>
+													<?php if($isEditMode && $cari->cari_ilce): ?>
+														<option value="<?= $cari->cari_ilce ?>" selected><?= $cari->ilce_adi ?></option>
+													<?php endif; ?>
 												</select>
 											</div>
 										</div>
@@ -265,17 +208,16 @@ $modulSorgula = modulSorgula($firma_ID, 1);
 											<label>Adres</label>
 											<textarea rows="9" cols="5" class="form-control"
 													  placeholder="Adres bilgisi giriniz..."
-													  name="cari_adres"></textarea>
-										</div>
-										<!-- Dosya Yükleme Alanı -->
+													  name="cari_adres"><?= $isEditMode ? $cari->cari_adres : '' ?></textarea>
+										</div>										<!-- Dosya Yükleme Alanı -->
 										<div class="form-group">
-											<label>Vergi levhası, imza sirküsü, kimlik fotokopisi yükleyiniz</label>
-											<input type="file" class="form-control" name="cari_dosya[]" multiple accept="*/*">
+											<label>Vergi levhası, imza sirküsü, kimlik fotokopisi yükleyiniz <span style="color: red;">*</span></label>
+											<input type="file" class="form-control" name="cari_dosya[]" multiple accept="*/*" required>
 										</div>
 										<!-- /Dosya Yükleme Alanı -->
 									</div>
-								</div>
-								<button type="submit" class="btn btn-danger" style="width:100%;" id="kydtBTN">Kaydet
+								</div>								<button type="submit" class="btn btn-danger" style="width:100%;" id="kydtBTN">
+									<?= $isEditMode ? 'Güncelle' : 'Kaydet' ?>
 								</button>
 							</form>
 						</div>
@@ -290,69 +232,8 @@ $modulSorgula = modulSorgula($firma_ID, 1);
 <!-- /Main Wrapper -->
 
 
-<?php if ($this->session->flashdata('cari_kodu_mevcut')): ?>
-	<script>
-		swal({
-			title: "Bilgilendirme",
-			type: "error",
-			text: "Eklemeye çalıştığınız cari kodu mevcut, lütfen farklı bir cari kodu ile tekrar deneyiniz.",
-			confirmButtonText: 'Tamam',
-			button: false,
-			timer: 5000,
-		});
-	</script>
-<?php endif; ?>
 
-<?php if ($this->session->flashdata('cari_kodu_3_karakter')): ?>
-	<script>
-		swal({
-			title: "Bilgilendirme",
-		 type: "error",
-			text: "Cari kodu en az 3 karakter olmalıdır. Tekrar deneyiniz.",
-			confirmButtonText: 'Tamam',
-			button: false,
-			timer: 5000,
-		});
-	</script>
-<?php endif; ?>
 
-<?php if ($this->session->flashdata('cari_kodu_vergino')): ?>
-	<script>
-		swal({
-			title: "Bilgilendirme",
-			type: "error",
-			text: "Aynı vergi numarasına ait cari kayıt edilemez. Tekrar deneyiniz.",
-			confirmButtonText: 'Tamam',
-			button: false,
-			timer: 5000,
-		});
-	</script>
-<?php endif; ?>
-
-<?php if ($this->session->flashdata('cari_kodu_vkn_karakter')): ?>
-	<script>
-		swal({
-			title: "Bilgilendirme",
-			type: "error",
-			text: "VKN 10 haneli olmalıdır. Tekrar deneyiniz.",
-			confirmButtonText: 'Tamam',
-			button: false,
-			timer: 5000,
-		});
-	</script>
-<?php endif; ?>
-<?php if ($this->session->flashdata('cari_kodu_tckn_karakter')): ?>
-	<script>
-		swal({
-			title: "Bilgilendirme",
-			type: "error",
-			text: "TCKN 11 haneli olmalıdır. Tekrar deneyiniz.",
-			confirmButtonText: 'Tamam',
-			button: false,
-			timer: 5000,
-		});
-	</script>
-<?php endif; ?>
 
 
 
@@ -365,20 +246,20 @@ $modulSorgula = modulSorgula($firma_ID, 1);
 		$('.ajaxIller').on('change', function (e) {
 			var base_url = "<?php echo base_url();?>";
 			var il_id = $(this).val();
-			$.post(base_url + 'home/get_ilceler', {il_id: il_id}, function (result) {
-				if (result && result.status != 'error') {
+			$.post(base_url + 'home/get_ilceler', {il_id: il_id}, function (result) {				if (result && result.status != 'error') {
 					var ilceler = result.data;
-					var select = '<div class="ilceler"><div class="form-group"><label>İlçe</label><select id="ilce" name="cari_ilce" class="form-control select" required>';
+					var select = '<div class="ilceler"><div class="form-group"><label>İlçe <span style="color: red;">*</span></label><select id="ilce" name="cari_ilce" class="form-control select" required>';
+					select += '<option value="">İlçe Seçiniz</option>';
 					for (var i = 0; i < ilceler.length; i++) {
 						select += '<option value="' + ilceler[i].id + '">' + ilceler[i].ilce + '</option>';
 					}
 					select += '</select></div></div>';
 					$('div.ilceler').empty().html(select);
 				} else {
-			alert('Hata : ' + result.message);
-		}
-	});
-	});
+					alert('Hata : ' + result.message);
+				}
+			});
+		});
 	});
 </script>
 
@@ -388,7 +269,6 @@ $modulSorgula = modulSorgula($firma_ID, 1);
 
 		$("#cari_input").css("display", "block");
 		$("#c_soyad").css("display", "none");
-
 		if (status == "Bireysel Müşteri") {
 
 			$("#vergiDairesi").prop('required', false);
@@ -398,7 +278,6 @@ $modulSorgula = modulSorgula($firma_ID, 1);
 			$("#vergiDairesi").val("");
 			$("#vergiNumarasi").val("");
 			$("#alias_pk").val("");
-			$("#cari_kodu").val("");
 			$("#cariAd").val("");
 
 		} else if (status == "Kurumsal Müşteri") {
@@ -409,7 +288,6 @@ $modulSorgula = modulSorgula($firma_ID, 1);
 			$("#vergiDairesi").val("");
 			$("#vergiNumarasi").val("");
 			$("#alias_pk").val("");
-			$("#cari_kodu").val("");
 			$("#cariAd").val("");
 
 		} else if (status == "Diğer") {
@@ -420,7 +298,6 @@ $modulSorgula = modulSorgula($firma_ID, 1);
 			$("#vergiDairesi").val("");
 			$("#vergiNumarasi").val("11111111111");
 			$("#alias_pk").val("");
-			$("#cari_kodu").val("");
 			$("#cariAd").val("");
 
 		}
@@ -621,9 +498,23 @@ $modulSorgula = modulSorgula($firma_ID, 1);
 
 <script>
 $(document).ready(function () {
-	// Varsayılan olarak Kurumsal Müşteri seçili gelsin ve alanlar açık olsun
-	$('#cariBireysel').val('0').trigger('change');
-	$('#cari_input').show();
+	<?php if($isEditMode): ?>
+		// Edit modunda - mevcut değerleri kullan
+		$('#cari_input').show();
+		<?php if($cari->cari_ilce): ?>
+			// İl seçildikten sonra ilçeleri yükle
+			setTimeout(function() {
+				$('#il').trigger('change');
+				setTimeout(function() {
+					$('#ilce').val('<?= $cari->cari_ilce ?>');
+				}, 500);
+			}, 100);
+		<?php endif; ?>
+	<?php else: ?>
+		// Create modunda - varsayılan değerler
+		$('#cariBireysel').val('0').trigger('change');
+		$('#cari_input').show();
+	<?php endif; ?>
 });
 </script>
 

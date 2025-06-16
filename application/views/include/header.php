@@ -1,11 +1,20 @@
 <?php 
 	$control2 = session("r", "login_info");
+	if (!$control2) {
+		// Kullanıcı oturumu yoksa, login sayfasına yönlendir veya hata göster
+		header("Location: /giris");
+		exit;
+	}
 	$u_id = $control2->kullanici_id;
 	$eposta = $control2->kullanici_eposta;
 	$yetki = $control2->kullanici_yetki;
 
 	$kullanici_demo = $control2->kullanici_demo;
 	$kullanici_demoSonTarihi = $control2->kullanici_demoSonTarihi;
+	// Kullanıcının grup bilgisini çek
+	$grup_id = $control2->grup_id;
+	$grup_sorgu = $this->db->query("SELECT kg_adi FROM kullanici_grubu WHERE kg_id = ?", array($grup_id));
+	$grup_adi = ($grup_sorgu->num_rows() > 0) ? $grup_sorgu->row()->kg_adi : 'Tanımsız Grup';
 
 	$bugunTarih = strtotime((new DateTime('now'))->format('Y-m-d H:i:s'));
 
@@ -31,10 +40,9 @@
 					<i class="fas fa-bars" style="color:#fff!important;"></i>
 				</a>
 				<!-- /Sidebar Toggle -->
-				
-				<!-- Search -->
+						<!-- Search -->
 				<div class="top-nav-search" style="background:none;">
-    <div class="slideshow-container" style="margin-left:15px!important;margin-top:5px!important;color:#fff!important;font-size:9pt!important;background:none!important;overflow:hidden;white-space:nowrap;width:1260px;max-width:100vw;">
+    <div class="slideshow-container duyuru-container" style="margin-left:15px!important;margin-top:5px!important;color:#fff!important;font-size:9pt!important;background:none!important;overflow:hidden;white-space:nowrap;width:1260px;max-width:100vw;">
 
         <?php $duyurular = $this->db->query("SELECT * FROM duyurular WHERE duyuru_durum = 1 ORDER BY RAND() LIMIT 5")->result();
             foreach($duyurular as $duyuru){
@@ -63,7 +71,137 @@
     0%   { transform: translateX(0); }
     100% { transform: translateX(-100%); }
 }
+
+/* Desktop stilleri */
+.top-nav-search {
+    display: block !important;
+    position: relative;
+    z-index: 1;
+}
+
+/* Mobil cihazlarda responsive duyuru */
+@media (max-width: 768px) {
+    .header-left .logo {
+        display: none !important;
+    }
+    
+    /* Mobilde duyuru alanını tamamen yeniden düzenle */
+    .top-nav-search {
+        display: block !important;
+        position: absolute !important;
+        left: 45px !important;
+        right: 50px !important;
+        top: 10px !important;
+        margin: 0 !important;
+        width: auto !important;
+        max-width: none !important;
+        background: none !important;
+        z-index: 10 !important;
+    }
+    
+    .duyuru-container {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        height: 30px !important;
+        overflow: hidden !important;
+    }
+    
+    .marquee-slide {
+        height: 30px !important;
+        display: flex !important;
+        align-items: center !important;
+    }
+      .marquee-slide span {
+        min-width: 200px !important;
+        font-size: 14px !important;
+        font-weight: 600 !important;
+        color: #ffeb3b !important;
+        animation: marquee 15s linear infinite !important;
+        padding-left: 50% !important;
+        line-height: 30px !important;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.8) !important;
+    }
+      .dot-container {
+        display: none !important;
+    }
+    
+    /* Mobil'de sidebar simgeleri beyaz yap */
+    #toggle_btn i,
+    #mobile_btn i {
+        color: #fff !important;
+    }
+}
+
+/* Mobil cihazlarda ekstra düzeltmeler */
+@media (max-width: 480px) {
+    .top-nav-search {
+        left: 40px !important;
+        right: 40px !important;
+    }
+      .marquee-slide span {
+        font-size: 13px !important;
+        font-weight: 600 !important;
+        color: #ffeb3b !important;
+        animation: marquee 12s linear infinite !important;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.8) !important;
+    }
+}
 </style>
+
+<script>
+// Duyuru slideshow için JavaScript
+let slideIndex = 1;
+let slideInterval;
+
+function showSlides(n) {
+    let slides = document.getElementsByClassName("mySlides");
+    let dots = document.getElementsByClassName("dot");
+    if (n > slides.length) {slideIndex = 1}
+    if (n < 1) {slideIndex = slides.length}
+    for (let i = 0; i < slides.length; i++) {
+        slides[i].style.display = "none";
+    }
+    for (let i = 0; i < dots.length; i++) {
+        dots[i].className = dots[i].className.replace(" active", "");
+    }
+    if (slides[slideIndex-1]) {
+        slides[slideIndex-1].style.display = "block";
+    }
+    if (dots[slideIndex-1]) {
+        dots[slideIndex-1].className += " active";
+    }
+}
+
+function currentSlide(n) {
+    showSlides(slideIndex = n);
+}
+
+function autoSlide() {
+    slideIndex++;
+    showSlides(slideIndex);
+}
+
+// Sayfa yüklendiğinde başlat
+document.addEventListener('DOMContentLoaded', function() {
+    showSlides(slideIndex);
+    slideInterval = setInterval(autoSlide, 5000); // 5 saniyede bir değiş
+});
+
+// Mobil cihazlarda duyuru görünürlüğünü kontrol et
+function checkMobileAnnouncement() {
+    const topNavSearch = document.querySelector('.top-nav-search');
+    if (topNavSearch && window.innerWidth <= 768) {
+        topNavSearch.style.display = 'block';
+        topNavSearch.style.visibility = 'visible';
+    }
+}
+
+// Sayfa yüklendiğinde ve pencere boyutu değiştiğinde kontrol et
+window.addEventListener('load', checkMobileAnnouncement);
+window.addEventListener('resize', checkMobileAnnouncement);
+</script>
 				<!-- /Search -->
 				
 				<!-- Mobile Menu Toggle -->
@@ -79,8 +217,7 @@
 						<a class="nav-link" href="javascript:void(0);" data-toggle="modal" data-target="#kur_modal">
 							<i data-feather="dollar-sign" class="mr-1"></i> Döviz Kuru
 						</a>
-					</li> -->
-					<?php if(isDemoActive() == 1 ){ ?>
+					</li> -->					<?php if(isDemoActive() == 1 ){ ?>
 						<li class="nav-item dropdown has-arrow main-drop">
 							<a href="#" class="dropdown-toggle nav-link" data-toggle="dropdown">
 								<span style="font-weight: bold;color:#ec1313!important;">Demo Üyelik</span>
@@ -90,8 +227,8 @@
 								<a class="dropdown-item" href="javascript:void(0);"><b>Kalan Gün: </b>&nbsp;<?= $kalan_gun; ?></a>
 								<a class="dropdown-item" href="javascript:void(0);">Hemen Satın Al</a>
 							</div>
-						</li>
-					<?php } ?>
+						</li>					<?php } ?>					
+					<!-- User menu moved to sidebar bottom for all platforms -->
 				
 				
 			</div>

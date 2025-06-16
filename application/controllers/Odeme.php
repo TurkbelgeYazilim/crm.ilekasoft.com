@@ -231,10 +231,8 @@ class Odeme extends CI_Controller
 				$data_odeme["odeme_ucret"] = $ucret;
 				$data_odeme["odeme_modul"] = $modul;
 				$data_odeme["odeme_tarih"] = $tarihsaat;
-				$this->vt->insert("odeme", $data_odeme);
-
-				if($modul == 999){
-					$userKim = $this->db->query("SELECT * FROM kullanicilar WHERE kullanici_anaHesapID = '$anaHesap'")->row();
+				$this->vt->insert("odeme", $data_odeme);				if($modul == 999){
+					$userKim = $this->db->query("SELECT * FROM kullanicilar WHERE kullanici_sorumluMudur = '$anaHesap'")->row();
 					$userid = $userKim->kullanici_id;
 
 					$data_user["kullanici_demo"] = NULL;

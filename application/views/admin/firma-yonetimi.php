@@ -92,10 +92,8 @@
 												</tr>
 											</thead>
 											<tbody>
-												<?php foreach($firmalar as $firm){?>
-
-													<?php
-														$firmCountr = "SELECT COUNT(*) as total FROM kullanicilar WHERE kullanici_anaHesapID = '$firm->ayarlar_id'";
+												<?php foreach($firmalar as $firm){?>													<?php
+														$firmCountr = "SELECT COUNT(*) as total FROM kullanicilar WHERE kullanici_sorumluMudur = '$firm->ayarlar_id'";
 														$firmCountrExe = $this->db->query($firmCountr)->row();
 
 														$modulCounter = "SELECT COUNT(*) as total FROM firmaModulleri WHERE firmaModul_firmaID = '$firm->ayarlar_id'";
@@ -134,8 +132,7 @@ class="btn btn-sm btn-white text-success mr-2"><i class="far fa-edit mr-1"></i><
 							</div>
 						</div>
 					</div>
-				<?php }else{ 
-					$kullanicilariQ = "SELECT * FROM kullanicilar WHERE kullanici_anaHesapID = '$kullanicilar' ORDER BY kullanici_id DESC";
+				<?php }else{					$kullanicilariQ = "SELECT * FROM kullanicilar WHERE kullanici_sorumluMudur = '$kullanicilar' ORDER BY kullanici_id DESC";
 					$kullanicilarExe = $this->db->query($kullanicilariQ)->result();
 
 					$firmaQ = "SELECT * FROM ayarlar WHERE ayarlar_id = '$kullanicilar'";

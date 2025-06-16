@@ -20,9 +20,8 @@
 		.form-group {
 			margin-bottom: 10px !important;
 		}
-
 		.card {
-		. margin-bottom: 0 px !important;
+			margin-bottom: 0px !important;
 		}
 	</style>
 
@@ -128,9 +127,8 @@ $modulSorgula = modulSorgula($firma_ID, 1);
 															   id="tcknvkn_input" required=""
 															   placeholder="Cari tckn/vkn veya cari adı yazmaya başlayıp, listeden seçiniz."
 															   value="<?= $cari_value ?>" onblur="cariKontrol();">
-													</div>
-													<div class="col-sm-1 p-0 mt-2" id="cariEkleBtn"
-														 style="display:;">
+													</div>													<div class="col-sm-1 p-0 mt-2" id="cariEkleBtn"
+														 style="display: none;">
 														<a href="javascript(0);" class="col-8 border-0 p-2 text-center"
 														   style="background-color: forestgreen;color:#fff;font-size:14px;border-radius: 5px;"
 														   data-toggle='modal' data-target='#cariEkle'><i
@@ -197,9 +195,7 @@ $modulSorgula = modulSorgula($firma_ID, 1);
 																</select>
 															</div>
 														</div>
-													</div>
-
-													<div class="col-md-12">
+													</div>													<div class="col-md-12" style="display: none;">
 														<div class="form-group row">
 															<label class="col-sm-3 text-sm-left pt-2">Tip</label>
 															<div class="col-sm-9" id="satis_efaturaTip_div">
@@ -306,8 +302,7 @@ $modulSorgula = modulSorgula($firma_ID, 1);
 																	   id="datetimepicker"/>
 															</div>
 														</div>
-													</div>
-													<div class="col-md-12">
+													</div>													<div class="col-md-12" style="display: none;">
 														<div class="form-group row">
 															<label class="col-sm-3 text-sm-left pt-2">Etiket</label>
 															<div class="col-sm-9">
@@ -332,11 +327,9 @@ $modulSorgula = modulSorgula($firma_ID, 1);
 										 id="checkboxDiv"<?php if (!$faturaDetay) echo "style='display:none;'"; ?>>
 										<div class="row pl-4">
 
-											<div class="col-md-4">
-
-												<input class="form-check-input" type="checkbox" value="1"
+											<div class="col-md-4">												<input class="form-check-input" type="checkbox" value="1"
 													   id="kdvCheck" onchange="kdvCheckFunc()"
-													   name="kdvCheck" style="width:30px;height:20px;">
+													   name="kdvCheck" style="width:30px;height:20px;" checked>
 												<label class="form-check-label ml-3" for="kdvCheck">
 													KDV Dahil
 												</label>

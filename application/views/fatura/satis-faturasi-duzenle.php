@@ -3,8 +3,7 @@
 <head>
 		<?php $this->load->view("include/head-tags"); ?>
 		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" integrity="sha512-vKMx8UnXk60zUwyUnUPM3HbQo8QfmNx7+ltw8Pm5zLusl1XIfwcxo8DbWCqMGKaWeNxWA8yrx5v3SaVpMvR3CA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-		
-		<style>
+				<style>
 	       .ui-autocomplete {
 	       		z-index: 999999;
 	            max-height: 200px;
@@ -17,10 +16,17 @@
 
 	        .form-group{
 	        	margin-bottom: 10px!important;
+	        }	        .card{
+	        	margin-bottom: 0px!important;
 	        }
-	        .card{
-	        	.margin-bottom:  0px!important;
-	        } 
+	        
+	        /* Hide Stok Kodu (Stock Code) and Birim (Unit) columns */
+			.table th:nth-child(3), /* Stok Kodu header */
+			.table td:nth-child(3), /* Stok Kodu data cells */
+			.table th:nth-child(6), /* Birim header */
+			.table td:nth-child(6) { /* Birim data cells */
+				display: none !important;
+			}
 		</style>
 </head>
 	<body>
@@ -73,7 +79,7 @@
 						<div class="col-md-12">
 							<div class="card">
 								<div class="card-body">
-									<form action="<?= base_url("fatura/satisFaturasiGuncelle"); ?>" method="POST" id="myForm">
+									<form action="<?= base_url("fatura/satisFaturasiGuncelle"); ?>" method="POST" id="myForm" enctype="multipart/form-data">
 										<input type="hidden" name="kh_id" value="<?= $satisFaturasi->satis_kasaHareketiID; ?>">
 										<input type="hidden" name="bh_id" value="<?= $satisFaturasi->satis_bankaHareketiID; ?>">
 										<input type="hidden" name="satis_id" value="<?= $satisFaturasi->satis_id; ?>">
@@ -146,11 +152,9 @@
 										<div class="col-md-2">
 											
 										</div>
-										<div class="col-md-5">
-
-											<div class="col-md-12">
+										<div class="col-md-5">											<div class="col-md-12">
 												<div class="form-group row">
-													<label class="col-sm-4 text-sm-left pt-2"><a href="<?= base_url("fatura/goruntule?tipi=satis&id=$satisFaturasi->satis_id"); ?>" target="_blank">Fatura No <i class="fa fa-external-link-alt"></i></a></label>
+													<label class="col-sm-4 text-sm-left pt-2"><a href="<?= base_url("fatura/goruntule?tipi=satis&id=$satisFaturasi->satis_id"); ?>" target="_blank">Sözleşme No <span style="color: red;">*</span> <i class="fa fa-external-link-alt"></i></a></label>
 													<div class="col-sm-8">
 														<input type="text" class="form-control" name="satis_faturaNo" required="" autocomplete="off" value="<?= $satisFaturasi->satis_faturaNo; ?>">
 													</div>
@@ -326,11 +330,42 @@ $x=1;
 										<div class="col-md-12">
 												<h4 class="card-title mt-4">Fatura Alt Bilgileri</h4>
 												<div class="row">
-													<div class="col-md-12">
-														<div class="form-group">
+													<div class="col-md-12">														<div class="form-group">
 															<label>Açıklama</label>
 															<textarea class="form-control" name="satis_aciklama"><?= $satisFaturasi->satis_aciklama; ?></textarea>
 														</div>
+													</div>													<div class="col-md-12">
+														<div class="form-group">
+															<label>Satış sözleşmesini lütfen buraya yükleyiniz <span style="color: red;">*</span></label>
+															<input type="file" class="form-control" name="fatura_dosya[]" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.txt,.xlsx,.xls" required>
+															<small class="form-text text-muted">Desteklenen dosya türleri: PDF, DOC, DOCX, JPG, JPEG, PNG, GIF, TXT, XLSX, XLS (Çoklu dosya seçilebilir)</small>
+														</div>
+																<?php if (!empty($satisFaturasi->satis_dosya)): ?>
+															<div class="form-group">
+																<label>Mevcut Dosyalar:</label>
+																<div class="uploaded-files">
+																	<?php 
+																	$existingFiles = explode(',', $satisFaturasi->satis_dosya);
+																	foreach ($existingFiles as $file): 
+																		if (!empty(trim($file))):
+																			$fileName = basename($file);
+																			$fileUrl = base_url() . $file;
+																	?>
+																		<div class="file-item mb-2 d-flex align-items-center">
+																			<a href="<?= $fileUrl ?>" target="_blank" class="btn btn-sm btn-outline-primary mr-2">
+																				<i class="fa fa-download"></i> <?= $fileName ?>
+																			</a>
+																			<button type="button" class="btn btn-sm btn-outline-danger delete-file-btn" data-file="<?= $fileName ?>" data-satis-id="<?= $satisFaturasi->satis_id ?>">
+																				<i class="fa fa-trash"></i>
+																			</button>
+																		</div>
+																	<?php 
+																		endif;
+																	endforeach; 
+																	?>
+																</div>
+															</div>
+														<?php endif; ?>
 													</div>
 												</div>
 										</div>
@@ -467,20 +502,18 @@ $(function(){
 
 				for(iy = 1; iy<=items; iy++){
 					counter.push(1);
-				}
-
-				function addItem() {
+				}				function addItem() {
 					items++;
 					counter.push(items);
 					var html = "<tr>";
 						html += "<td><a href='#' class='btn btn-success btn-sm' data-toggle='modal' data-target='#edit_category' data-id='"+items+"'><i class='fa fa-hand-pointer'></i> Seç</a> </td>";
 						html += "<td><input type='text' class='form-control' name='stokadi[]' id='stokadi"+items+"' readonly></td>";
-						html += "<td><input type='text' class='form-control' name='stokkodu[]' id='stokkodu"+items+"' readonly></td>";
+						html += "<td style='display:none'><input type='text' class='form-control' name='stokkodu[]' id='stokkodu"+items+"' readonly></td>";
 					    html += "<td><input type='hidden' name='stokid[]' id='stokid"+items+"'><input type='text' class='form-control' name='barkod[]' id='barkod"+items+"' readonly></td>";
 					    
 					    
 					    html += "<td><input type='number' step='0.01' class='form-control' onkeydown='event.preventDefault()' autocomplete='off' name='miktar[]' id='miktar"+items+"' required='' style='width:175px;'></td>";
-					    html += "<td><input type='text' class='form-control' name='birim[]' id='birim"+items+"' readonly></td>";
+					    html += "<td style='display:none'><input type='text' class='form-control' name='birim[]' id='birim"+items+"' readonly></td>";
 					    html += "<td><input type='number' step='0.001' class='form-control' onkeydown='event.preventDefault()' autocomplete='off' name='birimfiyat[]' id='birimfiyat"+items+"' required=''></td>";
 					    html += "<td><input type='text' class='form-control' name='kdv[]' id='kdv"+items+"' readonly></td>";
 					    html += "<td><input type='text' class='form-control' name='toplam[]' id='toplam"+items+"' readonly></td>";
@@ -983,8 +1016,141 @@ function resizableGrid(table) {
 					return false;
 				});
 				return true;
-			}); 
-	}); 
+			}); 	}); 
+</script>
+
+<!-- Flash Messages for File Upload -->
+<?php if ($this->session->flashdata('fatura_updt_ok')): ?>
+	<script>
+		swal({
+		  title: "Başarılı",
+		  type: "success", 
+		  text: "Fatura başarıyla güncellendi.",
+		  confirmButtonText:'Tamam',
+		  timer: 3000,
+		});
+	</script>
+<?php endif; ?>
+
+<?php if ($this->session->flashdata('file_upload_error')): ?>
+	<script>
+		swal({
+		  title: "Dosya Yükleme Hatası",
+		  type: "error", 
+		  text: "<?= $this->session->flashdata('file_upload_error') ?>",
+		  confirmButtonText:'Tamam',
+		  timer: 5000,
+		});
+	</script>
+<?php endif; ?>
+
+<!-- JavaScript for File Upload Enhancement -->
+<script>
+$(document).ready(function() {
+	// File upload preview and validation
+	$('input[name="fatura_dosya[]"]').on('change', function() {
+		var files = this.files;
+		var allowedTypes = ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png', 'gif', 'txt', 'xlsx', 'xls'];
+		var maxSize = 10 * 1024 * 1024; // 10MB
+		var hasError = false;
+		var errorMsg = '';
+		
+		for (var i = 0; i < files.length; i++) {
+			var file = files[i];
+			var fileName = file.name;
+			var fileSize = file.size;
+			var fileExt = fileName.split('.').pop().toLowerCase();
+			
+			// Check file type
+			if (allowedTypes.indexOf(fileExt) === -1) {
+				hasError = true;
+				errorMsg = 'Desteklenmeyen dosya türü: ' + fileName + '. İzin verilen türler: ' + allowedTypes.join(', ');
+				break;
+			}
+			
+			// Check file size
+			if (fileSize > maxSize) {
+				hasError = true;
+				errorMsg = 'Dosya boyutu çok büyük: ' + fileName + '. Maksimum 10MB.';
+				break;
+			}
+		}
+		
+		if (hasError) {
+			$(this).val(''); // Clear the input
+			swal({
+				title: "Dosya Hatası",
+				type: "error",
+				text: errorMsg,
+				confirmButtonText: 'Tamam'
+			});
+		} else if (files.length > 0) {
+			var fileNames = [];
+			for (var i = 0; i < files.length; i++) {
+				fileNames.push(files[i].name);
+			}
+			
+			// Show success message
+			toastr.success(files.length + ' dosya seçildi: ' + fileNames.join(', '));
+		}
+	});
+		// Form submission validation
+	$('#myForm').on('submit', function(e) {
+		var fileInput = $('input[name="fatura_dosya[]"]')[0];
+		if (fileInput && fileInput.files.length > 5) {
+			e.preventDefault();
+			swal({
+				title: "Çok Fazla Dosya",
+				type: "warning",
+				text: "En fazla 5 dosya yükleyebilirsiniz.",
+				confirmButtonText: 'Tamam'
+			});
+			return false;
+		}
+	});
+	
+	// File deletion functionality
+	$('.delete-file-btn').on('click', function() {
+		var fileName = $(this).data('file');
+		var satisId = $(this).data('satis-id');
+		var fileItemElement = $(this).closest('.file-item');
+		
+		swal({
+			title: "Dosyayı Sil",
+			text: "Bu dosyayı silmek istediğinizden emin misiniz?",
+			type: "warning",
+			showCancelButton: true,
+			confirmButtonText: "Evet, Sil",
+			cancelButtonText: "İptal",
+			closeOnConfirm: false
+		}, function(isConfirm) {
+			if (isConfirm) {
+				$.ajax({
+					url: '<?= base_url("fatura/deleteSalesContractFile") ?>',
+					type: 'POST',
+					dataType: 'json',
+					data: {
+						file_name: fileName,
+						satis_id: satisId
+					},
+					success: function(response) {
+						if (response.success) {
+							fileItemElement.fadeOut(300, function() {
+								$(this).remove();
+							});
+							swal("Başarılı!", response.message, "success");
+						} else {
+							swal("Hata!", response.message, "error");
+						}
+					},
+					error: function() {
+						swal("Hata!", "Dosya silinirken bir hata oluştu.", "error");
+					}
+				});
+			}
+		});
+	});
+});
 </script>
 	</body>
 </html>

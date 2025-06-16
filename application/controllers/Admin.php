@@ -10,9 +10,10 @@ class Admin extends CI_Controller {
 		
 		$control = session("r", "login");
 
-	  if (adminYetki() == 0)
-		  redirect("home/hata2/2");
-		
+		// YETKİ KONTROLÜ KALDIRILDI
+		// if (adminYetki() == 0)
+		//   redirect("home/hata2/2");
+	
 		if(!$control){
 			redirect("check");
 		}
@@ -148,12 +149,11 @@ class Admin extends CI_Controller {
 
 		$data_u["kullanici_eposta"] = $kullaniciEposta;
 		$data_u["kullanici_ad"] = postval("kullanici_ad");
-		$data_u["kullanici_soyad"] = postval("kullanici_soyad");
-		$data_u["kullanici_kullaniciAdi"] = $kullaniciAdi;
+		$data_u["kullanici_soyad"] = postval("kullanici_soyad");		$data_u["kullanici_kullaniciAdi"] = $kullaniciAdi;
 		$data_u["kullanici_sifre"] = md5(postval("kullanici_sifre"));
 		$data_u["kullanici_yetki"] = 1;
 		$data_u["kullanici_durum"] = 1;
-		$data_u["kullanici_anaHesapID"] = $a_id;
+		$data_u["kullanici_sorumluMudur"] = $a_id;
 		$data_u["kullanici_olusturmaTarihi"] = $tarihi;
 		$data_u["kullanici_olusturan"] = $u_id;
 
@@ -192,9 +192,8 @@ class Admin extends CI_Controller {
 	 	$data["kullanici_soyad"] = postval("kullanici_soyad");
 	 	$data["kullanici_kullaniciAdi"] = postval("kullanici_kullaniciAdi");
 	 	$data["kullanici_sifre"] = md5(postval("kullanici_sifre"));
-	 	$data["kullanici_yetki"] = postval("kullanici_yetki");
-	 	$data["kullanici_durum"] = 1;
-	 	$data["kullanici_anaHesapID"] = postval("anaHesap");
+	 	$data["kullanici_yetki"] = postval("kullanici_yetki");	 	$data["kullanici_durum"] = 1;
+	 	$data["kullanici_sorumluMudur"] = postval("anaHesap");
 	 	$data["kullanici_olusturmaTarihi"] = $tarih;
 	 	$data["kullanici_olusturan"] = $u_id;
 

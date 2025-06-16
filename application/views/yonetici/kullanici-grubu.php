@@ -1,75 +1,123 @@
-<?php
-defined('BASEPATH') OR exit('No direct script access allowed');
-
-class Yonetici extends CI_Controller {
-
-	public function __construct()
-	{
-		parent::__construct();
-		$this->load->model('yonetici_model');
-	}
-
-	public function kullanici_grubu()
-	{
-		$data['gruplar'] = $this->yonetici_model->tum_gruplari_getir();
-		$this->load->view('include/header');
-		$this->load->view('yonetici/kullanici-grubu', $data);
-		$this->load->view('include/footer');
-	}
-
-	public function kullanici_grubu_ekle()
-	{
-		$grup_adi = $this->input->post('grup_adi');
-		$aciklama = $this->input->post('aciklama');
-
-		$this->yonetici_model->grup_ekle($grup_adi, $aciklama);
-		redirect('yonetici/kullanici_grubu');
-	}
-
-	public function kullanici_grubu_sil($id)
-	{
-		$this->yonetici_model->grup_sil($id);
-		redirect('yonetici/kullanici_grubu');
-	}
-}
-?>
-
-<!-- existing code -->
-<div class="container mt-4">
-    <h3>Kullanıcı Grupları</h3>
-    <form action="<?= base_url('yonetici/kullanici_grubu_ekle'); ?>" method="post" class="mb-3">
-        <div class="row">
-            <div class="col-md-4">
-                <input type="text" name="grup_adi" class="form-control" placeholder="Grup Adı" required>
-            </div>
-            <div class="col-md-4">
-                <input type="text" name="aciklama" class="form-control" placeholder="Açıklama">
-            </div>
-            <div class="col-md-4">
-                <button type="submit" class="btn btn-primary">Grup Ekle</button>
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <?php $this->load->view("include/head-tags"); ?>
+</head>
+<body>
+    <div class="main-wrapper">
+        <!-- Header -->
+        <?php $this->load->view("include/header"); ?>
+        <!-- /Header -->
+        <!-- Sidebar -->
+        <?php $this->load->view("include/sidebar"); ?>
+        <!-- /Sidebar -->
+        <!-- Page Wrapper -->
+        <div class="page-wrapper">
+            <div class="content container-fluid">
+                <!-- Page Header -->
+                <div class="page-header">
+                    <div class="row">
+                        <div class="col-sm-10">
+                            <h3 class="page-title">Yönetici</h3>
+                            <ul class="breadcrumb">
+                                <li class="breadcrumb-item"><a href="<?= base_url(); ?>">Anasayfa</a></li>
+                                <li class="breadcrumb-item">Yönetici</li>
+                                <li class="breadcrumb-item active">Kullanıcı Grupları</li>
+                            </ul>
+                        </div>
+                        <div class="d-flex justify-content-end text-align-center col-sm-2">
+                            <a class="btn btn-outline-light" href="javascript:history.back()"><i class="fa fa-history"></i> <br>Önceki Sayfa</a>
+                        </div>
+                    </div>
+                </div>
+                <!-- /Page Header -->
+                <div class="row">
+                    <div class="col-xl-12 col-md-12">
+                        <div class="card card-table">
+                            <div class="card-header">
+                                <div class="row">
+                                    <div class="col">
+                                        <h5 class="card-title">Kullanıcı Grupları</h5>
+                                    </div>
+                                </div>
+                            </div>                            <div class="card-body">
+                                <?php if($this->session->flashdata('kullanici_grubu_ok')): ?>
+                                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                        <?= $this->session->flashdata('kullanici_grubu_ok') ?>
+                                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                    </div>
+                                <?php endif; ?>
+                                
+                                <?php if($this->session->flashdata('kullanici_grubu_hata')): ?>
+                                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                        <?= $this->session->flashdata('kullanici_grubu_hata') ?>
+                                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                    </div>
+                                <?php endif; ?>
+                                
+                                <div class="table-responsive">
+                                    <table class="table table-striped custom-table mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>#</th>
+                                                <th>Grup Adı</th>
+                                                <th>Açıklama</th>
+                                                <th>İşlem</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php if (!empty($gruplar)): $i=1; foreach($gruplar as $grup): ?>
+                                            <tr>
+                                                <td><?= $i++ ?></td>
+                                                <td><?= htmlspecialchars($grup->kg_adi) ?></td>
+                                                <td><?= htmlspecialchars($grup->kg_aciklama) ?></td>
+                                                <td class="text-right">
+                                                    <a href="<?= base_url('yonetici/kullaniciGrubuDuzenle/'.$grup->kg_id) ?>" class="btn btn-sm btn-white text-success mr-2">
+                                                        <i class="far fa-edit mr-1"></i> Düzenle
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                            <?php endforeach; else: ?>
+                                            <tr><td colspan="4">Hiç grup yok.</td></tr>
+                                            <?php endif; ?>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <hr>
+                                <h4>Yeni Grup Ekle</h4>
+                                <form method="post" action="<?= base_url('yonetici/kullaniciGrubuEkle') ?>">
+                                    <div class="mb-3">
+                                        <label for="kg_adi" class="form-label">Grup Adı</label>
+                                        <input type="text" class="form-control" id="kg_adi" name="kg_adi" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="kg_aciklama" class="form-label">Açıklama</label>
+                                        <input type="text" class="form-control" id="kg_aciklama" name="kg_aciklama">
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">Ekle</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-    </form>
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th>Grup Adı</th>
-                <th>Açıklama</th>
-                <th>İşlem</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php foreach($gruplar as $grup): ?>
-                <tr>
-                    <td><?= $grup->grup_adi; ?></td>
-                    <td><?= $grup->aciklama; ?></td>
-                    <td>
-                        <!-- Sil ve düzenle butonları eklenebilir -->
-                        <a href="<?= base_url('yonetici/kullanici_grubu_sil/'.$grup->id); ?>" class="btn btn-danger btn-sm">Sil</a>
-                    </td>
-                </tr>
-            <?php endforeach; ?>
-        </tbody>
-    </table>
-</div>
-<!-- existing code -->
+        <!-- /Page Wrapper -->    </div>
+    <?php $this->load->view("include/footer-js"); ?>
+    
+    <script>
+    // Form debug için
+    $('form').on('submit', function(e) {
+        console.log('Form gönderiliyor...');
+        console.log('Action:', $(this).attr('action'));
+        console.log('Method:', $(this).attr('method'));
+        console.log('Grup Adı:', $('#kg_adi').val());
+        console.log('Açıklama:', $('#kg_aciklama').val());
+    });
+    </script>
+</body>
+</html>

@@ -35,21 +35,58 @@ class Home extends CI_Controller
 			redirect("gib/index");
 		}else if ($modulOcrSorgula) {
 			redirect("ocr/index");
-		} 	 else {
-			$satisFaturasiQ = "SELECT satis_faturaTarihi as faturaTarihi,satis_faturaNo as faturaNo,satis_genelToplam as genelToplam,satis_paraBirimi as paraBirimi,'satis' as tip,satis_id as id,concat(cari.cari_ad,' ',cari.cari_soyad) as cari_ad FROM satisFaturasi inner join cari on satisFaturasi.satis_cariID=cari.cari_id  WHERE satis_olusturanAnaHesap = '$anaHesap' and satis_InvoiceType is null ORDER BY satis_id DESC LIMIT 6";
-			$alisFaturasiQ = "SELECT alis_faturaTarihi as faturaTarihi,alis_faturaNo as faturaNo,alis_genelToplam as genelToplam,alis_paraBirimi as paraBirimi,'alis' as tip,alis_id as id,concat(cari.cari_ad,' ',cari.cari_soyad) as cari_ad FROM alisFaturasi inner join cari on alisFaturasi.alis_cariID=cari.cari_id  WHERE alis_olusturanAnaHesap = '$anaHesap' ORDER BY alis_id DESC LIMIT 6";
+		} 	 else {			// Get logged-in user ID to filter only their sales invoices
+			$control2 = session("r", "login_info");
+			$logged_in_user_id = $control2->kullanici_id;
+			
+			$satisFaturasiQ = "SELECT satis_faturaTarihi as faturaTarihi,satis_faturaNo as faturaNo,satis_genelToplam as genelToplam,satis_paraBirimi as paraBirimi,'satis' as tip,satis_id as id,cari.cari_id,concat(cari.cari_ad,' ',cari.cari_soyad) as cari_ad FROM satisFaturasi inner join cari on satisFaturasi.satis_cariID=cari.cari_id  WHERE satis_olusturanAnaHesap = '$anaHesap' and satis_InvoiceType is null and satis_olusturan = '$logged_in_user_id' ORDER BY satis_id DESC LIMIT 6";
+			$alisFaturasiQ = "SELECT alis_faturaTarihi as faturaTarihi,alis_faturaNo as faturaNo,alis_genelToplam as genelToplam,alis_paraBirimi as paraBirimi,'alis' as tip,alis_id as id,cari.cari_id,concat(cari.cari_ad,' ',cari.cari_soyad) as cari_ad FROM alisFaturasi inner join cari on alisFaturasi.alis_cariID=cari.cari_id  WHERE alis_olusturanAnaHesap = '$anaHesap' and alis_olusturan = '$logged_in_user_id' ORDER BY alis_id DESC LIMIT 6";
     		
     		$af = $this->db->query($alisFaturasiQ)->result();
             $sf = $this->db->query($satisFaturasiQ)->result();
     		
     	
     	$sf=seciliAlanlarSorgu($satisFaturasiQ);
-    	
-    	$af=seciliAlanlarSorgu($alisFaturasiQ);
+      	$af=seciliAlanlarSorgu($alisFaturasiQ);
          
     		$fatura = array_merge($sf, $af);
     		rsort($fatura);
-    		$data["fatura"] = array_chunk($fatura, 6)[0];
+    		$data["fatura"] = array_chunk($fatura, 6)[0];  		// Calculate sales count and total amount for the logged-in user for today only
+		$control2 = session("r", "login_info");
+		$satis_adedi_bugun = 0;
+		$satis_toplam_bugun = 0;
+		
+		if ($control2 && isset($control2->kullanici_id)) {
+			$logged_in_user_id = $control2->kullanici_id;
+			$bugun = date('Y-m-d');
+					$satis_adedi_query = "SELECT COUNT(*) as toplam_satis_faturasi 
+								  FROM satisFaturasi 
+								  WHERE satis_olusturan = '$logged_in_user_id' 
+									AND satis_faturaTarihi = '$bugun'
+									AND satis_olusturanAnaHesap = '$anaHesap'
+									AND satis_InvoiceType IS NULL";
+			$satis_adedi_result = $this->db->query($satis_adedi_query)->row();
+			
+			if ($satis_adedi_result && isset($satis_adedi_result->toplam_satis_faturasi)) {
+				$satis_adedi_bugun = $satis_adedi_result->toplam_satis_faturasi;
+			}
+			
+			// Calculate total sales amount for today
+			$satis_toplam_query = "SELECT SUM(satis_genelToplam) as toplam_satis_tutari 
+								   FROM satisFaturasi 
+								   WHERE satis_olusturan = '$logged_in_user_id' 
+									 AND satis_faturaTarihi = '$bugun'
+									 AND satis_olusturanAnaHesap = '$anaHesap'
+									 AND satis_InvoiceType IS NULL";
+			$satis_toplam_result = $this->db->query($satis_toplam_query)->row();
+			
+			if ($satis_toplam_result && isset($satis_toplam_result->toplam_satis_tutari)) {
+				$satis_toplam_bugun = $satis_toplam_result->toplam_satis_tutari ?: 0;
+			}
+		}
+		
+		$data["satis_adedi_bugun"] = $satis_adedi_bugun;
+		$data["satis_toplam_bugun"] = $satis_toplam_bugun;
          
 			$this->load->view('index', $data);
 		}
