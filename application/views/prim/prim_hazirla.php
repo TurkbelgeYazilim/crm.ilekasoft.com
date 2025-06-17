@@ -251,7 +251,7 @@ $iller = $this->db->get('iller')->result();
           </div>          <div class="form-group fiyat-alani" id="fiyat1-group">
             <label>Bizim teklifimiz</label>
             <div class="input-group">
-              <input type="text" name="fiyat1" class="form-control fiyat-input" placeholder="0,00">
+              <input type="text" name="fiyat1" class="form-control fiyat-input" placeholder="0">
               <div class="input-group-append">
                 <span class="input-group-text">₺</span>
               </div>
@@ -260,7 +260,7 @@ $iller = $this->db->get('iller')->result();
           <div class="form-group fiyat-alani" id="fiyat2-group">
             <label>Müşteri beklentisi</label>
             <div class="input-group">
-              <input type="text" name="fiyat2" class="form-control fiyat-input" placeholder="0,00">
+              <input type="text" name="fiyat2" class="form-control fiyat-input" placeholder="0">
               <div class="input-group-append">
                 <span class="input-group-text">₺</span>
               </div>
@@ -269,7 +269,7 @@ $iller = $this->db->get('iller')->result();
           <div class="form-group fiyat-alani" id="fiyat3-group">
             <label>Olabilir teklif</label>
             <div class="input-group">
-              <input type="text" name="fiyat3" class="form-control fiyat-input" placeholder="0,00">
+              <input type="text" name="fiyat3" class="form-control fiyat-input" placeholder="0">
               <div class="input-group-append">
                 <span class="input-group-text">₺</span>
               </div>
@@ -639,9 +639,7 @@ $(document).ready(function() {
     $('#potansiyelSatisEkleModal').on('shown.bs.modal', function() {
         $('.fiyat-alani').show();
         $('#durum_id').val(''); // Durum seçimini sıfırla
-    });
-
-    // Fiyat alanları için Türk Lirası formatı
+    });    // Fiyat alanları için Türk Lirası formatı
     function formatTurkishCurrency(value) {
         // Sayıyı string'e çevir ve sadece rakamları al
         let numStr = value.toString().replace(/[^\d]/g, '');
@@ -651,24 +649,15 @@ $(document).ready(function() {
         // Sayıyı integer'a çevir
         let num = parseInt(numStr);
         
-        // Kuruş için son 2 basamağı ayır
-        let kurus = num % 100;
-        let lira = Math.floor(num / 100);
+        // Binlik ayırıcıları ekle (decimal yok, sadece tam sayı)
+        let liraStr = num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
         
-        // Binlik ayırıcıları ekle
-        let liraStr = lira.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-        
-        // Kuruşu 2 basamaklı yap
-        let kurusStr = kurus.toString().padStart(2, '0');
-        
-        return liraStr + ',' + kurusStr;
-    }
-
-    function parseTurkishCurrency(value) {
-        // Nokta ve virgülü kaldır, sadece rakamları al
+        return liraStr;
+    }    function parseTurkishCurrency(value) {
+        // Nokta kaldır, sadece rakamları al
         let numStr = value.replace(/[^\d]/g, '');
         if (numStr === '') return 0;
-        return parseInt(numStr) / 100;
+        return parseInt(numStr);
     }
 
     // Fiyat input alanlarına format uygula
