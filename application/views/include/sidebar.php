@@ -421,9 +421,26 @@ $irsaliyeModulSorgulama = modulSorgula($firma_ID, 5);
 								   class="<?php if ($uri2 == 'fis-yukle') {
 									   echo 'active';
 								   } ?>">Fiş / Fatura Yükle</a></li>
-							<?php endif; ?>
-						</ul>					</li>
+							<?php endif; ?>						</ul>					</li>
 					<?php endif; ?>
+					
+					<!-- Muhasebe Bölümü -->
+					<?php if (grup_modul_yetkisi_var(1350)): ?>
+					<li class="submenu <?php if ($uri == 'muhase') {
+						echo 'active';
+					} ?>">
+						<a href="#"><i data-feather="calculator"></i> <span>Muhasebe</span> <span class="menu-arrow"></span></a>
+						<ul>
+							<?php if (grup_modul_yetkisi_var(1360)): ?>
+							<li><a href="<?= base_url("muhase/onay-bekleyen-tahsilatlar"); ?>"
+								   class="<?php if ($uri2 == 'onay-bekleyen-tahsilatlar') {
+									   echo 'active';
+								   } ?>">Onay Bekleyen Tahsilatlar</a></li>
+							<?php endif; ?>
+						</ul>
+					</li>
+					<?php endif; ?>
+					
 							<!-- Raporlar Bölümü -->
 					<?php if(grup_modul_yetkisi_var(1400)) { ?>
 					<li>

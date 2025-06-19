@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <title>Teklif Hazırla | İlekaSoft CRM</title>
+    <title>Teklif Gör | İlekaSoft CRM</title>
     <link rel="icon" type="image/png" href="/assets/favicon.png">	<?php $this->load->view("include/head-tags"); ?>
 	<title>Teklif Hazırla | İlekaSoft CRM</title>
 	<link rel="icon" type="image/x-icon" href="<?= base_url('assets/favicon.ico'); ?>" />
@@ -378,12 +378,11 @@ $ilceler = array(); // Boş array - AJAX ile doldurulacak
 						</div>
 						<div class="card-body">							<div class="table-responsive">								<table class="table table-striped custom-table mb-0">									<thead>									<tr>
 										<th class="text-left no-sort">İşlem</th>
-										<th>Telefon</th>
-										<th>Cari Adı</th>
+										<th>Telefon</th>										<th>Cari Adı</th>
+										<th>Sezon</th>
 										<th class="hide-mobile">Cari Grup</th>
 										<th>İl</th>
-										<th>İlçe</th>
-										<th>Mahalle</th>
+										<th>İlçe</th><th>Mahalle</th>
 										<th>Adres</th>
 										<th class="hide-mobile text-center">Görsel</th>
 										<th class="hide-mobile text-center">Döküman</th>
@@ -794,14 +793,13 @@ $(document).ready(function() {    $('#il').on('change', function() {
                         }
                         
                         rows.push([
-                            '<button class="btn btn-sm btn-outline-primary potansiyel-cari-teklif" data-id="'+(item.id||'')+'" data-ad="'+(item.potansiyel_cari_ad||'')+'" data-tel="'+(item.potansiyel_cari_firmaTelefon||'')+'"><i class="fa fa-file-text"></i> Teklif</button>',
-                            (item.potansiyel_cari_firmaTelefon || ''),
+                            '<button class="btn btn-sm btn-outline-primary potansiyel-cari-teklif" data-id="'+(item.id||'')+'" data-ad="'+(item.potansiyel_cari_ad||'')+'" data-tel="'+(item.potansiyel_cari_firmaTelefon||'')+'"><i class="fa fa-file-text"></i> Teklif</button>',                            (item.potansiyel_cari_firmaTelefon || ''),
                             (item.potansiyel_cari_ad || ''),
+                            (item.sezon_adi || ''),
                             (item.potansiyel_cari_grup || ''),
                             (item.il_adi || ''),
                             (item.ilce_adi || ''),
-                            (item.potansiyel_mahalle || ''),
-                            (item.potansiyel_cari_adres || ''),
+                            (item.potansiyel_mahalle || ''),                            (item.potansiyel_cari_adres || ''),
                             gorselHtml,
                             dokumanHtml
                         ]);
@@ -867,14 +865,13 @@ $(document).ready(function() {    $('#il').on('change', function() {
                     }
                     
                     rows.push([
-                        '<button class="btn btn-sm btn-outline-primary potansiyel-cari-teklif" data-id="'+(item.id||'')+'" data-ad="'+(item.potansiyel_cari_ad||'')+'" data-tel="'+(item.potansiyel_cari_firmaTelefon||'')+'"><i class="fa fa-file-text"></i> Teklif</button>',
-                        (item.potansiyel_cari_firmaTelefon || ''),
+                        '<button class="btn btn-sm btn-outline-primary potansiyel-cari-teklif" data-id="'+(item.id||'')+'" data-ad="'+(item.potansiyel_cari_ad||'')+'" data-tel="'+(item.potansiyel_cari_firmaTelefon||'')+'"><i class="fa fa-file-text"></i> Teklif</button>',                        (item.potansiyel_cari_firmaTelefon || ''),
                         (item.potansiyel_cari_ad || ''),
+                        (item.sezon_adi || ''),
                         (item.potansiyel_cari_grup || ''),
                         (item.il_adi || ''),
                         (item.ilce_adi || ''),
-                        (item.potansiyel_mahalle || ''),
-                        (item.potansiyel_cari_adres || ''),
+                        (item.potansiyel_mahalle || ''),                        (item.potansiyel_cari_adres || ''),
                         gorselHtml,
                         dokumanHtml
                     ]);

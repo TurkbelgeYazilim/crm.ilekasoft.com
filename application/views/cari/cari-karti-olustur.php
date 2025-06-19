@@ -2,16 +2,19 @@
 <html lang="tr">
 <head>
 	<?php $this->load->view("include/head-tags"); ?>
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" integrity="sha512-vKMx8UnXk60zUwyUnUPM3HbQo8QfmNx7+ltw8Pm5zLusl1XIfwcxo8DbWCqMGKaWeNxWA8yrx5v3SaVpMvR3CA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-	<style>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" integrity="sha512-vKMx8UnXk60zUwyUnUPM3HbQo8QfmNx7+ltw8Pm5zLusl1XIfwcxo8DbWCqMGKaWeNxWA8yrx5v3SaVpMvR3CA==" crossorigin="anonymous" referrerpolicy="no-referrer" />	<style>
 		/* Select2 dropdown hover rengini mor yap */
 		.select2-container--default .select2-results__option--highlighted[aria-selected] {
 			background-color: #5c2d91 !important;
 			color: #fff !important;
-		}
-		.form-group {
+		}		.form-group {
     margin-bottom: 0.56rem !important; /* 0.75rem'in %25'i kadar daha azaltıldı */
 }
+		}
+		#modalImage {
+			border-radius: 8px;
+			box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+		}
 	</style>
 </head>
 <body>
@@ -34,18 +37,20 @@ $modulSorgula = modulSorgula($firma_ID, 1);
 
 	<!-- Page Wrapper -->
 	<div class="page-wrapper">
-		<div class="content container-fluid">
-
-			<!-- Page Header -->Müşteri Listesi
+		<div class="content container-fluid">			<!-- Page Header -->
 			<div class="page-header">
 				<div class="row">
 
 					<div class="col-sm-10">
-						<h3 class="page-title">Müşteri Oluştur</h3>
+						<?php
+						// Edit modu kontrolü için $cari varlığını kontrol et
+						$isPageEditMode = isset($cari) && !empty($cari);
+						?>
+						<h3 class="page-title"><?= $isPageEditMode ? 'Müşteri Düzenle' : 'Müşteri Oluştur' ?></h3>
 						<ul class="breadcrumb">
 							<li class="breadcrumb-item"><a href="<?= base_url(); ?>">Anasayfa</a></li>
 							<li class="breadcrumb-item">Müşteri</li>
-							<li class="breadcrumb-item active">Müşteri Oluştur</li>
+							<li class="breadcrumb-item active"><?= $isPageEditMode ? 'Müşteri Düzenle' : 'Müşteri Oluştur' ?></li>
 						</ul>
 					</div>
 					<div class="d-flex justify-content-end text-align-center col-sm-2">
@@ -189,8 +194,20 @@ $modulSorgula = modulSorgula($firma_ID, 1);
 												   value="<?= $isEditMode ? $cari->cari_firmaTelefon : '' ?>">
 										</div>										<!-- Fotoğraflar Yükleme Alanı -->
 										<div class="form-group">
-											<label>İşletmeye ait en az 3 fotoğraf yükleyiniz <span style="color: red;">*</span></label>
-											<input type="file" class="form-control" name="cari_fotograflar[]" multiple accept="image/*" required>
+											<label>İşletme Görselleri
+												<?php if(!$isEditMode): ?>
+													<span style="color: red;">*</span>
+												<?php endif; ?>
+											</label>
+				
+											
+											<!-- Yeni Görsel Yükleme -->
+											<label class="d-block">
+												<?= $isEditMode ? 'Yeni Görsel Ekle (İsteğe bağlı):' : 'İşletmeye ait en az 3 fotoğraf yükleyiniz:' ?>
+											</label>
+											<input type="file" class="form-control" name="cari_fotograflar[]" multiple accept="image/*" 
+												   <?= !$isEditMode ? 'required' : '' ?>>
+											<small class="text-muted">JPG, PNG, GIF formatları kabul edilir. Maksimum 5MB.</small>
 										</div>
 										<!-- /Fotoğraflar Yükleme Alanı -->
 									</div>									<div class="col-md-6">										<div class="ilceler">
@@ -211,8 +228,20 @@ $modulSorgula = modulSorgula($firma_ID, 1);
 													  name="cari_adres"><?= $isEditMode ? $cari->cari_adres : '' ?></textarea>
 										</div>										<!-- Dosya Yükleme Alanı -->
 										<div class="form-group">
-											<label>Vergi levhası, imza sirküsü, kimlik fotokopisi yükleyiniz <span style="color: red;">*</span></label>
-											<input type="file" class="form-control" name="cari_dosya[]" multiple accept="*/*" required>
+											<label>Evraklar (Vergi levhası, imza sirküsü, kimlik fotokopisi)
+												<?php if(!$isEditMode): ?>
+													<span style="color: red;">*</span>
+												<?php endif; ?>
+											</label>
+				
+											
+											<!-- Yeni Evrak Yükleme -->
+											<label class="d-block">
+												<?= $isEditMode ? 'Yeni Evrak Ekle (İsteğe bağlı):' : 'Vergi levhası, imza sirküsü, kimlik fotokopisi yükleyiniz:' ?>
+											</label>
+											<input type="file" class="form-control" name="cari_dosya[]" multiple accept="*/*" 
+												   <?= !$isEditMode ? 'required' : '' ?>>
+											<small class="text-muted">PDF, DOC, DOCX, JPG, PNG ve diğer dosya formatları kabul edilir. Maksimum 10MB.</small>
 										</div>
 										<!-- /Dosya Yükleme Alanı -->
 									</div>
@@ -481,23 +510,19 @@ $modulSorgula = modulSorgula($firma_ID, 1);
 	$(document).ready(function () {
 		$("#il").select2({
 			width: '100%'
-		});
-		$("#cariGrupKodu").select2({
+		});		$("#cariGrupKodu").select2({
 			width: '100%'
 		});
 
-
-		$("form").submit(function () {
-			$(this).submit(function () {
-				return false;
-			});
-			return true;
-		});
+		// Form submit blocking kodu kaldırıldı - güncelleme çalışması için
 	});
 </script>
 
 <script>
 $(document).ready(function () {
+	// Submit butonunu başlangıçta etkinleştir
+	$("#kydtBTN").prop('disabled', false);
+	
 	<?php if($isEditMode): ?>
 		// Edit modunda - mevcut değerleri kullan
 		$('#cari_input').show();
@@ -511,11 +536,13 @@ $(document).ready(function () {
 			}, 100);
 		<?php endif; ?>
 	<?php else: ?>
-		// Create modunda - varsayılan değerler
+	// Create modunda - varsayılan değerler
 		$('#cariBireysel').val('0').trigger('change');
-		$('#cari_input').show();
+	$('#cari_input').show();
 	<?php endif; ?>
 });
+
+
 </script>
 
 </body>

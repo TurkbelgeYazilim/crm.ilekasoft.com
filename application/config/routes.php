@@ -10,12 +10,9 @@ $route['cari/cari-listesi'] = 'cari/cariListesi';
 $route['cari/cari-listesi/(:num)'] = 'cari/cariListesi';
 $route['cari/cari-hareketleri'] = 'cari/cariHareketleri';
 $route['cari/cari-gruplari'] = 'cari/cariGruplari';
-// Unified cari form routes
-$route['cari/cari-karti-olustur'] = 'cari/cariForm';
-$route['cari/cari-karti-duzenle/(:num)'] = 'cari/cariForm/$1';
-// Legacy routes (backward compatibility)
-$route['cari/cari-karti-olustur-legacy'] = 'cari/cariKartiOlustur';
-$route['cari/cari-karti-duzenle-legacy/(:num)'] = 'cari/cariKartiDuzenle/$1';
+// FIXED: Correct routing for cari edit form
+$route['cari/cari-karti-olustur'] = 'cari/cariKartiOlustur';
+$route['cari/cari-karti-duzenle/(:num)'] = 'cari/cariKartiDuzenle/$1';
 $route['cari/cari-dekont'] = 'cari/cariDekont';
 $route['cari/cari-dekont-duzenle/(:num)'] = 'cari/cariDekontDuzenle/$1';
 
@@ -248,3 +245,9 @@ $route['illegal/sektor-ekle'] = 'illegal/sektor_ekle';
 $route['illegal/sektor-guncelle'] = 'illegal/sektor_guncelle';
 $route['illegal/sektor-sil'] = 'illegal/sektor_sil';
 $route['illegal/telefon_search'] = 'illegal/telefon_search';
+
+// Muhasebe modülü
+$route['muhase/onay-bekleyen-tahsilatlar'] = 'muhase/onayBekleyenTahsilatlar';
+$route['muhase/tahsilat-onay/(:num)'] = 'muhase/tahsilatOnay/$1';
+$route['muhase/tahsilat-red/(:num)'] = 'muhase/tahsilatRed/$1';
+$route['muhase/tahsilat-detay/(:num)'] = 'muhase/tahsilatDetay/$1';

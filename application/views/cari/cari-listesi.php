@@ -7,10 +7,72 @@
 		color: #fff !important;
 	}
 	
+	/* Görsel ve Evrak kolonları için stil */
+	.gorsel-column, .evrak-column {
+		width: 80px;
+		text-align: center;
+	}
+	
+	.gorsel-thumbnail {
+		width: 50px;
+		height: 50px;
+		object-fit: cover;
+		border-radius: 5px;
+		cursor: pointer;
+		border: 2px solid #e0e0e0;
+		transition: all 0.3s ease;
+	}
+	
+	.gorsel-thumbnail:hover {
+		border-color: #007bff;
+		transform: scale(1.1);
+	}
+	
+	.badge-overlay {
+		position: relative;
+		display: inline-block;
+	}
+	
+	.badge-overlay .badge {
+		position: absolute;
+		top: -5px;
+		right: -5px;
+		font-size: 10px;
+		min-width: 18px;
+		height: 18px;
+		line-height: 18px;
+		border-radius: 9px;
+	}
+	
+	.evrak-btn {
+		min-width: 50px;
+	}
+	
+	/* Modal için stil */
+	.carousel-item img {
+		max-height: 400px;
+		object-fit: contain;
+		width: 100%;
+	}
+	
+	.list-group-item:hover {
+		background-color: #f8f9fa;
+	}
+	
 	/* Mobilde Önceki Sayfa butonunu gizle */
 	@media (max-width: 767.98px) {
 		.col-sm-2 {
 			display: none !important;
+		}
+		
+		/* Mobilde görsel ve evrak kolonu boyutlarını ayarla */
+		.gorsel-column, .evrak-column {
+			width: 60px;
+		}
+		
+		.gorsel-thumbnail {
+			width: 40px;
+			height: 40px;
 		}
 	}
 	</style>
@@ -87,8 +149,7 @@
 						</div>
 						<div class="card-body">
 							<div class="table-responsive">
-								<table class="table table-striped custom-table mb-0">
-									<thead>
+								<table class="table table-striped custom-table mb-0">									<thead>
 									<tr>
 										<th>Cari Kodu</th>
 										<th>Cari Adı</th>
@@ -96,6 +157,8 @@
 										<th>Cari Grubu</th>
 										<th>Vergi Dairesi</th>
 										<th>İl</th>
+										<th class="gorsel-column">İşletme Görsel</th>
+										<th class="evrak-column">Evrak</th>
 										<th>B/A</th>
 										<th class="text-right">İşlem</th>
 									</tr>
@@ -171,10 +234,49 @@
 													echo "Kurumsal";
 												} elseif ($cariTipi == 2) {
 													echo "Diğer";
-												} ?></td>
-											<td><?= $grubuexe->cariGrup_ad; ?></td>
+												} ?></td>											<td><?= $grubuexe->cariGrup_ad; ?></td>
 											<td><?= $cr->cari_vergiDairesi; ?></td>
 											<td><?= $ilexe->il; ?></td>
+											<td class="gorsel-column">
+												<?php if (!empty($cr->fotograf_dosya)): ?>
+													<?php 
+													$fotograflar = explode(',', $cr->fotograf_dosya);
+													$ilk_fotograf = $fotograflar[0];
+													?>
+													<div class="badge-overlay">
+														<img src="<?= base_url('assets/uploads/' . $ilk_fotograf); ?>" 
+															 alt="İşletme Görseli" 
+															 class="gorsel-thumbnail"
+															 data-toggle="modal" 
+															 data-target="#gorselModal" 
+															 data-images="<?= htmlspecialchars($cr->fotograf_dosya); ?>"
+															 data-cari="<?= htmlspecialchars($cr->cari_ad); ?>">
+														<?php if (count($fotograflar) > 1): ?>
+															<span class="badge badge-primary">+<?= count($fotograflar) - 1 ?></span>
+														<?php endif; ?>
+													</div>
+												<?php else: ?>
+													<i class="fa fa-image text-muted" title="Görsel yok"></i>
+												<?php endif; ?>
+											</td>
+											<td class="evrak-column">
+												<?php if (!empty($cr->evrak_dosya)): ?>
+													<?php 
+													$evraklar = explode(',', $cr->evrak_dosya);
+													?>
+													<button type="button" 
+															class="btn btn-sm btn-outline-primary evrak-btn" 
+															data-toggle="modal" 
+															data-target="#evrakModal"
+															data-documents="<?= htmlspecialchars($cr->evrak_dosya); ?>"
+															data-cari="<?= htmlspecialchars($cr->cari_ad); ?>"
+															title="<?= count($evraklar) ?> evrak">
+														<i class="fa fa-file"></i> <?= count($evraklar) ?>
+													</button>
+												<?php else: ?>
+													<i class="fa fa-file text-muted" title="Evrak yok"></i>
+												<?php endif; ?>
+											</td>
 											<td><?= $bakiye; ?></td>
 											<td class="text-right">
 												<a href="<?= base_url("cari/cari-hareketleri?cari=$cr->cari_id"); ?>"
@@ -325,6 +427,53 @@
 					</form>
 				</div>
 			</div>
+		</div>	</div>
+
+	<!-- Görsel Modal -->
+	<div id="gorselModal" class="modal custom-modal fade" role="dialog">
+		<div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title">İşletme Görselleri - <span id="gorselCariAd"></span></h5>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				<div class="modal-body">
+					<div id="gorselCarousel" class="carousel slide" data-ride="carousel">
+						<div class="carousel-inner" id="gorselCarouselInner">
+							<!-- Görseller buraya eklenecek -->
+						</div>
+						<a class="carousel-control-prev" href="#gorselCarousel" role="button" data-slide="prev" style="display: none;" id="prevControl">
+							<span class="carousel-control-prev-icon" aria-hidden="true"></span>
+							<span class="sr-only">Önceki</span>
+						</a>
+						<a class="carousel-control-next" href="#gorselCarousel" role="button" data-slide="next" style="display: none;" id="nextControl">
+							<span class="carousel-control-next-icon" aria-hidden="true"></span>
+							<span class="sr-only">Sonraki</span>
+						</a>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Evrak Modal -->
+	<div id="evrakModal" class="modal custom-modal fade" role="dialog">
+		<div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h5 class="modal-title">Evraklar - <span id="evrakCariAd"></span></h5>
+					<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+					</button>
+				</div>
+				<div class="modal-body">
+					<div class="list-group" id="evrakListesi">
+						<!-- Evraklar buraya eklenecek -->
+					</div>
+				</div>
+			</div>
 		</div>
 	</div>
 
@@ -368,8 +517,76 @@
 			autoUpdateInput: false
 		}, function (start, end, label) {
 			$('#daterange').val(start.format('DD.MM.YYYY') + ' - ' + end.format('DD.MM.YYYY'));
-			//console.log("A new date selection was made: " + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD'));
-		});
+			//console.log("A new date selection was made: " + start.format('YYYY-MM-DD') + ' to ' + end.format('YYYY-MM-DD'));		});
+	});
+
+	// Görsel Modal İşlevselliği
+	$('#gorselModal').on('show.bs.modal', function (event) {
+		var button = $(event.relatedTarget);
+		var images = button.data('images');
+		var cariAd = button.data('cari');
+		
+		$('#gorselCariAd').text(cariAd);
+		
+		if (images) {
+			var imageArray = images.split(',');
+			var carouselInner = $('#gorselCarouselInner');
+			carouselInner.empty();
+			
+			imageArray.forEach(function(image, index) {
+				var activeClass = index === 0 ? 'active' : '';
+				var imageHtml = '<div class="carousel-item ' + activeClass + '">' +
+					'<img class="d-block w-100" src="<?= base_url("assets/uploads/"); ?>' + image.trim() + '" ' +
+					'alt="İşletme Görseli" style="max-height: 400px; object-fit: contain;">' +
+					'</div>';
+				carouselInner.append(imageHtml);
+			});
+			
+			// Kontrol butonlarını göster/gizle
+			if (imageArray.length > 1) {
+				$('#prevControl, #nextControl').show();
+			} else {
+				$('#prevControl, #nextControl').hide();
+			}
+		}
+	});
+
+	// Evrak Modal İşlevselliği
+	$('#evrakModal').on('show.bs.modal', function (event) {
+		var button = $(event.relatedTarget);
+		var documents = button.data('documents');
+		var cariAd = button.data('cari');
+		
+		$('#evrakCariAd').text(cariAd);
+		
+		if (documents) {
+			var documentArray = documents.split(',');
+			var evrakListesi = $('#evrakListesi');
+			evrakListesi.empty();
+			
+			documentArray.forEach(function(document, index) {
+				var fileName = document.trim().split('/').pop().replace(/^[^_]*_/, ''); // Prefix'i kaldır
+				var fileExtension = fileName.split('.').pop().toLowerCase();
+				var icon = 'fa-file';
+				
+				// Dosya tipine göre ikon belirle
+				if (['pdf'].includes(fileExtension)) {
+					icon = 'fa-file-pdf text-danger';
+				} else if (['doc', 'docx'].includes(fileExtension)) {
+					icon = 'fa-file-word text-primary';
+				} else if (['xls', 'xlsx'].includes(fileExtension)) {
+					icon = 'fa-file-excel text-success';
+				} else if (['jpg', 'jpeg', 'png', 'gif'].includes(fileExtension)) {
+					icon = 'fa-file-image text-info';
+				}
+				
+				var documentHtml = '<a href="<?= base_url("assets/uploads/"); ?>' + document.trim() + '" ' +
+					'class="list-group-item list-group-item-action" target="_blank">' +
+					'<i class="fa ' + icon + ' mr-2"></i>' + fileName +
+					'</a>';
+				evrakListesi.append(documentHtml);
+			});
+		}
 	});
 </script>
 
