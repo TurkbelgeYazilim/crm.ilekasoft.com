@@ -1,0 +1,279 @@
+/* Muhasebe Modülü CSS Stilleri */
+
+/* Genel Kart Stilleri */
+.muhase-card {
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: none;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.muhase-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+/* Header Stilleri */
+.muhase-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 1.5rem;
+    border-bottom: none;
+}
+
+.muhase-header .card-title {
+    margin: 0;
+    font-weight: 600;
+    font-size: 1.25rem;
+}
+
+/* Tahsilat Listesi Stilleri */
+.tahsilat-item {
+    padding: 1.5rem;
+    border-bottom: 1px solid #f1f1f1;
+    transition: all 0.3s ease;
+}
+
+.tahsilat-item:hover {
+    background-color: #f8f9fa;
+    transform: translateX(5px);
+}
+
+.tahsilat-item:last-child {
+    border-bottom: none;
+}
+
+/* Tutar Vurguları */
+.tutar-buyuk {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #28a745;
+}
+
+.tutar-orta {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #17a2b8;
+}
+
+.tutar-kucuk {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #6c757d;
+}
+
+/* Durum Badge'leri */
+.badge-bekliyor {
+    background-color: #ffc107;
+    color: #212529;
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: 500;
+}
+
+.badge-onaylandi {
+    background-color: #28a745;
+    color: white;
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: 500;
+}
+
+.badge-reddedildi {
+    background-color: #dc3545;
+    color: white;
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: 500;
+}
+
+/* İşlem Butonları */
+.tahsilat-actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.btn-detay {
+    background: linear-gradient(45deg, #007bff, #0056b3);
+    border: none;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-detay:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 123, 255, 0.4);
+    color: white;
+}
+
+.btn-onayla {
+    background: linear-gradient(45deg, #28a745, #20c997);
+    border: none;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-onayla:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
+    color: white;
+}
+
+.btn-reddet {
+    background: linear-gradient(45deg, #dc3545, #c82333);
+    border: none;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-reddet:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(220, 53, 69, 0.4);
+    color: white;
+}
+
+/* İstatistik Kartları */
+.stat-card {
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+    border: none;
+    background: white;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.stat-card.bekleyen {
+    border-left: 5px solid #ffc107;
+}
+
+.stat-card.onaylanan {
+    border-left: 5px solid #28a745;
+}
+
+.stat-card.reddedilen {
+    border-left: 5px solid #dc3545;
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    color: #6c757d;
+    font-size: 0.875rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .tahsilat-item {
+        padding: 1rem;
+    }
+    
+    .tahsilat-actions {
+        flex-direction: column;
+        gap: 0.25rem;
+        align-items: stretch;
+    }
+    
+    .tahsilat-actions .btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .tutar-buyuk {
+        font-size: 1.25rem;
+    }
+    
+    .tutar-orta {
+        font-size: 1.1rem;
+    }
+    
+    .stat-number {
+        font-size: 2rem;
+    }
+}
+
+/* Loading States */
+.loading-overlay {
+    position: relative;
+}
+
+.loading-overlay::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+}
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #007bff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #6c757d;
+}
+
+.empty-state i {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.empty-state h5 {
+    margin-bottom: 0.5rem;
+    color: #495057;
+}
+
+.empty-state p {
+    margin-bottom: 0;
+    font-size: 0.875rem;
+}

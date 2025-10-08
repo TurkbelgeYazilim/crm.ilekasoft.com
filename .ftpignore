@@ -1,0 +1,64 @@
+# FTP UPLOAD İGNORE LİSTESİ
+# Bu dosyalar FTP'ye yüklenmeyecek
+
+# Documentation files
+*.md
+*.txt
+*.log
+
+# SQL files
+*.sql
+
+# Development files
+*_test.*
+*_debug.*
+debug_*.*
+test_*.*
+
+# Backup files
+*_backup.*
+*.bak
+
+# IDE files
+.vscode/
+.idea/
+.history/
+.lh/
+*.sublime-*
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Git files
+.git/
+.gitignore
+.gitattributes
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+
+# Cache files
+application/cache/*
+application/logs/*
+
+# Upload directories (keep structure)
+assets/uploads/*
+
+# Vendor dependencies (if needed)
+vendor/
+
+# Node modules (if any)
+node_modules/
+
+# Composer files
+composer.lock
+
+# Environment files
+.env
+.env.local
+.env.production

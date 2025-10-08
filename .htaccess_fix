@@ -1,0 +1,6 @@
+# Bu dosya sadece fix_gorsel_web.php için geçici erişim sağlar
+<Files "fix_gorsel_web.php">
+    Order allow,deny
+    Allow from all
+    Satisfy any
+</Files>

@@ -1,0 +1,263 @@
+{
+  "app_version": "2.5.2",
+  "last_updated": "2025-10-08",
+  "versions": [
+    {
+      "version": "2.5.2",
+      "date": "2025-10-08",
+      "title": "Versiyon Geçmişi Modal Geliştirmeleri",
+      "changes": [
+        {
+          "type": "feature",
+          "description": "Versiyon geçmişi modal'ında accordion sistemi eklendi",
+          "details": "Her versiyon başlığı tıklanabilir hale getirilerek detayları açılır/kapanır kutu şeklinde gösterilmektedir"
+        },
+        {
+          "type": "feature",
+          "description": "Sayfalama (pagination) sistemi eklendi",
+          "details": "Versiyon listesi sayfa başına 10 adet gösterilecek şekilde sayfalandırıldı, kullanıcı deneyimi iyileştirildi"
+        },
+        {
+          "type": "ui",
+          "description": "Modal tasarımı ve animasyonları iyileştirildi",
+          "details": "Chevron ikonları, hover efektleri ve smooth geçiş animasyonları eklendi"
+        },
+        {
+          "type": "improvement",
+          "description": "Modal performansı ve scroll davranışı optimize edildi",
+          "details": "Modal içeriği max-height ile sınırlandırıldı ve sayfa değiştiğinde otomatik üst scroll yapılıyor"
+        }
+      ],
+      "files_modified": [
+        "application/views/include/footer-js.php",
+        "application/config/changelog.json"
+      ],
+      "db_changes": false
+    },
+    {
+      "version": "2.5.1",
+      "date": "2025-10-08",
+      "title": "Tahsilat Listesi ₺ Simgesi Kaldırma",
+      "changes": [
+        {
+          "type": "ui",
+          "description": "Toplam Tahsilat Tutarı alanından ₺ simgesi kaldırıldı",
+          "details": "Tahsilat listesi sayfasındaki toplam tutar gösteriminde ₺ simgesi kaldırılarak sadece sayısal değer gösterimi yapıldı"
+        }
+      ],
+      "files_modified": [
+        "application/views/muhasebe/tahsilat-listesi.php",
+        "application/config/changelog.json"
+      ],
+      "db_changes": false
+    },
+    {
+      "version": "2.5.0",
+      "date": "2025-10-08",
+      "title": "Tahsilat Listesi İstatistik Paneli Yenilendi",
+      "changes": [
+        {
+          "type": "feature",
+          "description": "Tahsilat listesi üst istatistik paneli tamamen yenilendi",
+          "details": "Eski 4 kutucuk yerine 6 yeni kutucuk: Durum Bekleyen/Tamamlanan/Reddedilen, Senet Adet/Tutar, Çek Adet/Tutar, Banka Adet/Tutar, Kasa Adet/Tutar, Vadesi Geçen Çek/Senet Adet/Tutar"
+        },
+        {
+          "type": "backend",
+          "description": "Detaylı istatistik hesaplama algoritması eklendi",
+          "details": "Controller'da tip bazında ve durum bazında gelişmiş istatistik hesaplama, vadesi geçen çek/senet tespiti"
+        },
+        {
+          "type": "ui",
+          "description": "İstatistik kutucuklarının tasarımı responsive olarak güncellendi",
+          "details": "6 sütunlu grid layout, mobil uyumlu font boyutları, renkli gradient arka planlar"
+        },
+        {
+          "type": "improvement",
+          "description": "Vade tarihi kontrolü ve geç kalan tahsilat tespiti",
+          "details": "Çek ve senet vade tarihleri kontrol edilerek vadesi geçen tahsilatlar ayrı kutucukta gösteriliyor"
+        }
+      ],
+      "files_modified": [
+        "application/views/muhasebe/tahsilat-listesi.php",
+        "application/controllers/Muhasebe.php",
+        "application/config/changelog.json"
+      ],
+      "db_changes": false
+    },
+    {
+      "version": "2.4.9",
+      "date": "2025-10-08",
+      "title": "Tam Ana Rapor Görsel Sistemi ve PDF Desteği Geliştirmeleri",
+      "changes": [
+        {
+          "type": "feature",
+          "description": "PDF dosyaları için gelişmiş modal görüntüleme sistemi eklendi",
+          "details": "PDF dosyaları artık modal içinde iframe ile doğrudan görüntülenebiliyor, yeni sekmede açma ve modal içinde görüntüleme seçenekleri eklendi"
+        },
+        {
+          "type": "improvement",
+          "description": "Görsel gösterme modal'ı tamamen yeniden geliştirildi",
+          "details": "showGorsel() fonksiyonu PDF/resim dosyaları için farklı görüntüleme modları sağlıyor, modal içinde iframe desteği"
+        },
+        {
+          "type": "ui",
+          "description": "Modal arayüz tasarımı ve buton düzenleri iyileştirildi",
+          "details": "PDF görüntüleme için Geri/Yeni Sekmede Aç butonları, daha temiz modal başlık tasarımı"
+        },
+        {
+          "type": "backend",
+          "description": "showPdfInModal() ve görsel modal fonksiyonları eklendi",
+          "details": "JavaScript ile PDF iframe oluşturma, modal kapanma davranışları, dosya tipine göre içerik renderları"
+        },
+        {
+          "type": "feature",
+          "description": "Tahsilat onay sistemi checkbox eklentileri",
+          "details": "7 Ekim'te tahsilat onay checkbox'ları ve ilgili SQL güncellemeleri eklendi"
+        },
+        {
+          "type": "improvement",
+          "description": "Stok endpoint'leri ve görsel yükleme stabilizasyonu",
+          "details": "4-6 Ekim arasında stok bilgileri, kaydetme ve görsel yükleme endpoint'lerinde çoklu iyileştirmeler"
+        },
+        {
+          "type": "feature",
+          "description": "Senet yönetim sistemi geliştirmeleri",
+          "details": "7 Ekim'te senet yönetim sayfasında kullanıcı deneyimi iyileştirmeleri"
+        },
+        {
+          "type": "improvement",
+          "description": "Tahsilat listesi ve detay sayfalarında çoklu iyileştirmeler",
+          "details": "8 Ekim'te tahsilat listesi sayfasında görsel ve fonksiyonel iyileştirmeler"
+        }
+      ],
+      "files_modified": [
+        "application/views/muhasebe/tam-ana-rapor.php",
+        "application/views/muhasebe/tahsilat-listesi.php",
+        "application/views/muhasebe/senet-yonetim.php",
+        "stok_bilgileri_endpoint.php",
+        "stok_kaydet_endpoint.php",
+        "application/config/changelog.json",
+        "application/views/include/footer-js.php"
+      ],
+      "db_changes": true
+    },
+    {
+      "version": "2.4.8",
+      "date": "2025-10-03",
+      "title": "Versiyon Takip Sistemi ve Changelog Eklentisi",
+      "changes": [
+        {
+          "type": "feature",
+          "description": "Otomatik versiyon takip sistemi eklendi",
+          "details": "Footer'da tıklanabilir versiyon bilgisi ve detaylı changelog modal'ı"
+        },
+        {
+          "type": "backend",
+          "description": "Changelog helper fonksiyonları oluşturuldu",
+          "details": "updateChangelog(), addChangelogEntry(), autoUpdateChangelog() fonksiyonları"
+        },
+        {
+          "type": "backend",
+          "description": "Home::getChangelog() API endpoint'i eklendi",
+          "details": "Changelog verilerini JSON formatında döndüren AJAX endpoint"
+        },
+        {
+          "type": "ui",
+          "description": "Footer versiyon alanı yeniden tasarlandı",
+          "details": "Git branch ikonu ve tıklanabilir versiyon linki eklendi"
+        },
+        {
+          "type": "feature",
+          "description": "Changelog modal arayüzü oluşturuldu",
+          "details": "Kategorik değişiklik tipleri, dosya listesi, versiyon geçmişi"
+        }
+      ],
+      "files_modified": [
+        "application/views/include/footer-js.php",
+        "application/controllers/Home.php",
+        "application/helpers/changelog_helper.php",
+        "application/config/autoload.php",
+        "application/config/changelog.json"
+      ],
+      "db_changes": false
+    },
+    {
+      "version": "2.4.7",
+      "date": "2025-10-03",
+      "title": "Stok Bilgileri Modal Cari Detayları Eklentisi",
+      "changes": [
+        {
+          "type": "feature",
+          "description": "Stok Bilgileri modal'ına cari detayları paneli eklendi",
+          "details": "Modal sol alt köşesinde Çek, Banka & Pos, Senet ve Nakit tahsilat detayları gösterilir"
+        },
+        {
+          "type": "backend",
+          "description": "getCariDetaylar() API endpoint'i eklendi",
+          "details": "Muhasebe controller'ına cari tahsilat detaylarını getiren yeni method eklendi"
+        },
+        {
+          "type": "ui",
+          "description": "Modal layout güncellendi",
+          "details": "Stok Bilgileri modal'ı 2 kolonlu layout'a geçirildi (9:3 oranında)"
+        },
+        {
+          "type": "feature",
+          "description": "Kategorik görsel tasarım",
+          "details": "Her tahsilat türü için farklı renkler ve ikonlar eklendi"
+        }
+      ],
+      "files_modified": [
+        "application/views/muhasebe/tam-ana-rapor.php",
+        "application/controllers/Muhasebe.php"
+      ],
+      "db_changes": false
+    },
+    {
+      "version": "2.4.6",
+      "date": "2025-09-28",
+      "title": "Örnek Önceki Versiyon",
+      "changes": [
+        {
+          "type": "bugfix",
+          "description": "Tahsilat tablosu performans iyileştirmesi",
+          "details": "Büyük veri setlerinde yavaşlık sorunu giderildi"
+        }
+      ],
+      "files_modified": [],
+      "db_changes": false
+    }
+  ],
+  "change_types": {
+    "feature": {
+      "label": "Yeni Özellik",
+      "icon": "fa-plus-circle",
+      "color": "success"
+    },
+    "bugfix": {
+      "label": "Hata Düzeltme",
+      "icon": "fa-bug",
+      "color": "warning"
+    },
+    "improvement": {
+      "label": "İyileştirme",
+      "icon": "fa-arrow-up",
+      "color": "info"
+    },
+    "ui": {
+      "label": "Arayüz",
+      "icon": "fa-paint-brush",
+      "color": "primary"
+    },
+    "backend": {
+      "label": "Altyapı",
+      "icon": "fa-cogs",
+      "color": "secondary"
+    },
+    "security": {
+      "label": "Güvenlik",
+      "icon": "fa-shield-alt",
+      "color": "danger"
+    }
+  }
+}

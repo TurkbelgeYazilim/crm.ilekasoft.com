@@ -1,0 +1,39 @@
+RewriteEngine on
+
+# PHP Upload Limitleri (Büyük CSV dosyaları için)
+php_value upload_max_filesize 100M
+php_value post_max_size 100M
+php_value max_execution_time 600
+php_value memory_limit 1024M
+php_value max_input_time 600
+
+# Assets klasörü için istisna (CSS, JS, IMG dosyaları)
+
+RewriteCond %{REQUEST_URI} ^/assets/
+
+RewriteRule ^.*$ - [L]
+
+
+
+RewriteCond %{REQUEST_FILENAME} !-f
+
+RewriteCond %{REQUEST_FILENAME} !-d
+
+RewriteRule ^(.*)$ index.php/$1 [L]
+
+
+
+RewriteRule .* - [E=noabort:1]
+
+RewriteRule .* - [E=noconntimeout:1]
+
+
+
+Options -Indexes
+
+
+
+RewriteCond %{SERVER_PORT} 80
+
+RewriteRule ^(.*)$ https://crm.ilekasoft.com/$1 [R,L]
+
