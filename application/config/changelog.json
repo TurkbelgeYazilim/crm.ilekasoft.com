@@ -1,7 +1,48 @@
 {
-  "app_version": "2.5.2",
+  "app_version": "2.6.0",
   "last_updated": "2025-10-08",
   "versions": [
+    {
+      "version": "2.6.0",
+      "date": "2025-10-08",
+      "title": "GitHub Güvenlik ve Repository Kurulumu",
+      "changes": [
+        {
+          "type": "security",
+          "description": "Hassas konfigürasyon bilgileri GitHub'tan çıkarıldı",
+          "details": "Veritabanı şifreleri, SMS API bilgileri ve email SMTP şifreleri .gitignore'a eklendi"
+        },
+        {
+          "type": "feature",
+          "description": "Template konfigürasyon dosyaları oluşturuldu",
+          "details": "database.example.php, sms.example.php ve email.example.php şablon dosyaları eklendi"
+        },
+        {
+          "type": "feature",
+          "description": "SETUP.md kurulum kılavuzu eklendi",
+          "details": "Repository kurulumu, konfigürasyon ve güvenlik talimatları içeren detaylı kurulum rehberi"
+        },
+        {
+          "type": "security",
+          "description": "GitHub repository güvenlik yapılandırması",
+          "details": "Hassas dosyaların .gitignore ile korunması ve güvenli commit protokolü oluşturuldu"
+        },
+        {
+          "type": "improvement",
+          "description": "Repository organizasyonu iyileştirildi",
+          "details": "https://github.com/TurkbelgeYazilim/crm.ilekasoft.com adresine güvenli şekilde publish edildi"
+        }
+      ],
+      "files_modified": [
+        ".gitignore",
+        "application/config/database.example.php",
+        "application/config/sms.example.php", 
+        "application/config/email.example.php",
+        "SETUP.md",
+        "application/config/changelog.json"
+      ],
+      "db_changes": false
+    },
     {
       "version": "2.5.2",
       "date": "2025-10-08",
